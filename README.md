@@ -90,14 +90,14 @@ Amazon Inspector2 would be enabled in all accounts, regions with the scan type y
 
 If your Delegated Admininistrator (DA) account is different than your management Organization account, then after step 1, log into your DA account. If not, continue the next steps in the same account.
 You will need to execute the steps 2, 3 and 4 in the DA account as shown in the table below.
-Caution: **Wait a few minutes** after step 4 to check the status with `get_status`. You can check the progress through the console while the script is running.
+Caution: **Wait around 5 minutes** after step 4 to check the status with `get_status`. You can check the progress through the console while the script is running.
 
 | N°     | Run the script in | Parameters | Description | 
 | ------ | ------ | ------ | ------ |
-| 1   | Management Organization account | `delegate_admin -da DA_ACCOUNT_ID` | designate `DA_ACCOUNT_ID` as Inspector2 DA for AWS Organizations |
-| 2   | Delegated Administrator Account | `activate -t DA_ACCOUNT_ID -s all` | Activate Inspector2 on the DA account for EC2 & ECR scans|
-| 3   | Delegated Administrator Account | `auto_enable -e "ec2=true, ecr=false" ` | Configure auto-enablement of Inspector2 on the accounts attached to the DA |
-| 4   | Delegated Administrator Account | `attach -t members` | Attach the member accounts to the DA account |
+| 1   | Management Organization account | `-a delegate_admin -da DA_ACCOUNT_ID` | designate `DA_ACCOUNT_ID` as Inspector2 DA for AWS Organizations |
+| 2   | Delegated Administrator Account | `-a activate -t DA_ACCOUNT_ID -s ec2|ecr|all` | Activate Inspector2 on the DA account for selected scans: EC2 | ECR | EC2 & ECR|
+| 3   | Delegated Administrator Account | `-a auto_enable -e "ec2=true, ecr=false" ` | Configure auto-enablement of Inspector2 on the accounts attached to the DA |
+| 4   | Delegated Administrator Account | `-a attach -t members` | Attach the member accounts to the DA account |
 
 Wait a few minutes for the Amazon Inspector2 to be enable in all the accounts and regions configured.
 
@@ -111,13 +111,13 @@ For Inspector2 deactivation, you will need to follow the steps below.
 
 | N°     | Run the script in | Parameters | Description | 
 | ------ | ------ | ------ | ------ |
-| 5   | Delegated Administrator Account | `deactivate -t members -s all` | deactivate Inspector2 by removing all scans types from members accounts |
-| 6   | Delegated Administrator Account | `detach_members -t members` | Detach the memebers accounts from the DA account|
-| 7   | Delegated Administrator Account | `deactivate -t DA_ACCOUNT_ID -s all` | Deactivate Inspector2 on the DA account|
-| 8   | Management Organization account| `remove_admin -da DA_ACCOUNT_ID` | Remove DA account  |
+| 5   | Delegated Administrator Account | `-a deactivate -t members -s ec2|ecr|all` | Deactivate a type of scan EC2|ECR. Or deactivate Inspector2 by removing all scans types from members accounts |
+| 6   | Delegated Administrator Account | `-a detach_members -t members` | Detach the memebers accounts from the DA account|
+| 7   | Delegated Administrator Account | `-a deactivate -t DA_ACCOUNT_ID -s all` | Deactivate Inspector2 on the DA account|
+| 8   | Management Organization account| `-a remove_admin -da DA_ACCOUNT_ID` | Remove DA account  |
 
-Wait around 5 minutes after step 5 and then check the status with `get_status`. 
-Optionally, wait around 5 minutes after step 6 and then check the status with `get_status`. 
+Wait around 5 minutes after step 5 and then check the status with `get_status`. Most accounts should now have "DISABLING" as status for the scan you deactivated.
+Optionally, wait around 5 minutes after step 6 and then check the status with `get_status`. Most accounts should now have "DISASSOCIATED" as status for the scan you deactivated.
 Connect to the Management Organization account for step 8.
 
 
