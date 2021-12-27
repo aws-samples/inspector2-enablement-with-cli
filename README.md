@@ -95,7 +95,7 @@ Caution: **Wait around 5 minutes** after step 4 to check the status with `get_st
 | N°     | Run the script in | Parameters | Description | 
 | ------ | ------ | ------ | ------ |
 | 1   | Management Organization account | `-a delegate_admin -da DA_ACCOUNT_ID` | designate `DA_ACCOUNT_ID` as Inspector2 DA for AWS Organizations |
-| 2   | Delegated Administrator Account | `-a activate -t DA_ACCOUNT_ID -s ec2|ecr|all` | Activate Inspector2 on the DA account for selected scans: EC2 | ECR | EC2 & ECR|
+| 2   | Delegated Administrator Account | `-a activate -t DA_ACCOUNT_ID -s all` | Activate Inspector2 on the DA account for selected scans: ec2 or ecr or `all` = ec2 & ecr|
 | 3   | Delegated Administrator Account | `-a auto_enable -e "ec2=true, ecr=false" ` | Configure auto-enablement of Inspector2 on the accounts attached to the DA |
 | 4   | Delegated Administrator Account | `-a attach -t members` | Attach the member accounts to the DA account |
 
@@ -111,7 +111,7 @@ For Inspector2 deactivation, you will need to follow the steps below.
 
 | N°     | Run the script in | Parameters | Description | 
 | ------ | ------ | ------ | ------ |
-| 5   | Delegated Administrator Account | `-a deactivate -t members -s ec2|ecr|all` | Deactivate a type of scan EC2|ECR. Or deactivate Inspector2 by removing all scans types from members accounts |
+| 5   | Delegated Administrator Account | `-a deactivate -t members -s all` | Deactivate a type of scan ec2 or ecr. Or deactivate Inspector2 by removing  `all` = ec2 & ecr scans types from members accounts |
 | 6   | Delegated Administrator Account | `-a detach_members -t members` | Detach the memebers accounts from the DA account|
 | 7   | Delegated Administrator Account | `-a deactivate -t DA_ACCOUNT_ID -s all` | Deactivate Inspector2 on the DA account|
 | 8   | Management Organization account| `-a remove_admin -da DA_ACCOUNT_ID` | Remove DA account  |
