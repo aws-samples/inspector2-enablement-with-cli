@@ -49,8 +49,8 @@ Below are the default variables in the script :
 #### 2.4.2 Variables to set in the parameters file 
 Below are the variables in the `param_inspector2.json` that you will need to update according to your Organization:
 - `inspector2_da.id`       : AWS Account id you want to designate as Delegated Admin for Amazon Inspector2
-- `scanning_type.selected` : Inspector2 scanning type to be enable. Possible values are "ECR" | "EC2" | "EC2 ECR"
-- `auto_enable.conf`       : Configure the scanning type to be enable for new accounts that are attached to the DA. You must always set the value for both ec2 and ecr. Example : `auto_enable.conf="ec2=true,ecr=true"`
+- `scanning_type.selected` : Inspector2 scanning type to be enable. Possible values are "ECR" | "EC2" | "EC2 ECR" (use upper case)
+- `auto_enable.conf`       : Configure the scanning type to be enable for new accounts that are attached to the DA. You must always set the value for both ec2 and ecr, at an least with one of them being true. Example : `auto_enable.conf="ec2=true,ecr=false"`
 - `regions.enablement`     : The list of AWS regions where you want to enable/disable Amazon Inspector2. Example in the parameters file. If not specified in the file nor found as exported variable, then the script will use the current region.
 
 #### 2.4.3 Export the variables
@@ -96,7 +96,7 @@ Caution: **Wait a few minutes** after step 4 to check the status with `get_statu
 | ------ | ------ | ------ | ------ |
 | 1   | Management Organization account | `delegate_admin -da DA_ACCOUNT_ID` | designate `DA_ACCOUNT_ID` as Inspector2 DA for AWS Organizations |
 | 2   | Delegated Administrator Account | `activate -t DA_ACCOUNT_ID -s all` | Activate Inspector2 on the DA account for EC2 & ECR scans|
-| 3   | Delegated Administrator Account | `auto_enable` | Configure auto-enablement of Inspector2 on the accounts attached to the DA |
+| 3   | Delegated Administrator Account | `auto_enable -e "ec2=true, ecr=false" ` | Configure auto-enablement of Inspector2 on the accounts attached to the DA |
 | 4   | Delegated Administrator Account | `attach -t members` | Attach the member accounts to the DA account |
 
 Wait a few minutes for the Amazon Inspector2 to be enable in all the accounts and regions configured.
