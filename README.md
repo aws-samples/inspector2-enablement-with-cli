@@ -15,6 +15,8 @@ Below the prerequites in order to successfully run the script to deploy Amazon I
 Using this script, it is assumed you have met the prerequites in the Amazon Inspector2 [official documentation](https://docs.aws.amazon.com/inspector/latest/user/getting_started_tutorial.html). 
 
 ### 2.1. AWS CLI 
+Note: You can use AWS CloudShell.
+
 #### 2.1.1.  AWS CLI version
 The below versions at the minimum expected to use Amazon Inspector2 CLI reference:
 - For AWS CLI 1, install at least version [1.22.16](https://github.com/aws/aws-cli/blob/develop/CHANGELOG.rst#12216)
@@ -106,7 +108,7 @@ Use `-h`or `--help` to see the commands options.
 ## 4. Activation phase
 Amazon Inspector2 would be enabled in all accounts, regions with the scan type you configured in the variales. 
 
-![Activation phase using the script](Inspector2_script_activation.png)
+![Activation phase using the script](images/inspector2_activation.png)
 
 If your Delegated Admininistrator (DA) account is different than your management Organization account, then after step 1, log into your DA account. If not, continue the next steps in the same account.
 You will need to execute the steps 2, 3 and 4 in the DA account as shown in the table below.
@@ -127,7 +129,7 @@ In the DA Account, execute the script with `get_status` to get the Inspector2 ac
 ## 5. Deactivation phase
 For Inspector2 deactivation, you will need to follow the steps below.
 
-![Deactivation phase using the script](Inspector2_script_deactivation.png)
+![Deactivation phase using the script](images/inspector2_deactivation.png)
 
 | N°     | Run the script in | Parameters | Description | 
 | ------ | ------ | ------ | ------ |
@@ -140,15 +142,6 @@ Wait around 5 minutes after step 5 and then check the status with `get_status`. 
 Optionally, wait around 5 minutes after step 6 and then check the status with `get_status`. Most accounts should now have "DISASSOCIATED" as status for the scan you deactivated.
 Connect to the Management Organization account for step 8.
 
-
-## My Project
-
-TODO: Fill this README out!
-
-Be sure to:
-
-* Change the title in this README
-* Edit your repository description on GitHub
 
 ## Security
 
