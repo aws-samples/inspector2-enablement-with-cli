@@ -19,6 +19,7 @@ Using this script, it is assumed you have met the prerequites in the Amazon Insp
 The below versions at the minimum expected to use Amazon Inspector2 CLI reference:
 - For AWS CLI 1, install at least version [1.22.16](https://github.com/aws/aws-cli/blob/develop/CHANGELOG.rst#12216)
 - For AWS CLI 2, install at least version [2.4.3](https://github.com/aws/aws-cli/blob/v2/CHANGELOG.rst#243)
+
 Note : The script works with CLI version 1 and CLI version 2. The script checks AWS CLI version when running.
 
 #### 2.1.2.  jq
@@ -62,7 +63,7 @@ At the end of the script execution, unset the variables exported by doing:
 - `unset INSPECTOR2_REGIONS`.
 
 
-## 3. Script execution
+## 3. Usage
 The script runs locally using AWS CLI and works also on CloudShell. Maybe the easiest way to run it, by uploading the scriptsfor the customer. 
 If you have designated an account different than the Management Organization Account as "Delegated Administrator" for Amazon Inspector2, you will need to :
 1. run the script in the Management Organization Account : As per the security principle, only this account can designate another account as admin
@@ -70,17 +71,36 @@ If you have designated an account different than the Management Organization Acc
 
 If you have designated the Management Organization account as the Delegated Admininistrator for Amazon Inspector2, then run all the steps of the script in only that account.
 
-
 ### 3.1. script parameters
-If you run the script with no parameters you will see the list of options.
+1. If you run the script with no parameters you will see the list of options.
+```
+./script.sh 
+```
+Use `-h`or `--help` to see the commands options.
+
+2. The list of actions that can be performed with the script require `-a` or `--action`. It is a mandatory option.
+  1. `-a get_status` : Check the enablement status of Amazon Inspector per regions and per scan type. When run from the delegated admin (DA) account, return the status of all the AWS Organizations. If run from an account different than the DA, than return the status only for that account.
+  2. `-a designate_admin [-da ACCOUNTID]`: Designate one account as DA on regions specified. 
+     - `-da ACCOUNTID` :  indicate the account that should be set as DA. If `-da` is not used, then the script will search for a value in the parameters file, if empty, will check to see if a value has been exported for `INSPECTOR2_DA`.
+  3. `-a activate -t ACCOUNTID|members [-s all]`: Activate a scan type in regions. The other options are the following:
+     - A target account(s) is mandatory: `-t members | ACCOUNTID`. Either specified an ACCOUNTID `-t ACCOUNTID` on which scan type will be enabled, or use `-t members` to select all the accounts from AWS Organizations except the DA account on which to enable the scan type. 
+     - The scan type is specified `-s ec2|ecr|all`. This is optional, when not specified, then both scans type EC2&ECR will be enabled
+     - Example : ```./script.sh -a activate -t members [-s ecr] ```
+ 4. `-a auto_enable [-e "ec2=true, ecr=true"]`: configure the automatic activation of Amazon Inspector2 to accounts newly attached to the DA based on the configuration set. 
+     - `-e "ec2=true, ecr=false"` : specified the scan type to enable on each newly attached account. This is optional, when not used, the script will read the value in the parameter file. If nothing is set in the parameters file, then the script will applied the default value of `$default_auto_enable_conf`
+ 5. `-a attach -t ACCOUNTID|members`: attach the specified target account(s) to the DA account
+ 6. `-a desactivate -t ACCOUNTID|members [-s all]`: deactivate a specified scan for Amazon Inspector2. In order to deactive Amazon Inspector2, all the scan types should be disabled. 
+ 7. `-a detach -t ACCOUNTID|members`: Detach a target from the DA. 
+ 8. `-a remove_admin [-da ACCOUNTID]`: Remove an an account as DA for Amazon Inspector2. 
+
 
 ### 3.2. Dry run
 `--dry-run` | `-r` option is available for each command. 
 
 ### 3.3. Example of script usage
 `./script_name.sh delegate_admin -da ACCOUNTD_ID --dry-run`
- 
-`./script_name.sh activate -t ACCOUNT_ID -s all `
+
+ `./script_name.sh activate -t ACCOUNT_ID -s all `
 
 
 ## 4. Activation phase
