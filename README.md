@@ -108,7 +108,7 @@ Use `-h`or `--help` to see the commands options.
 ## 4. Activation phase
 Amazon Inspector2 would be enabled in all accounts, regions with the scan type you configured in the variales. 
 
-![Activation phase using the script](images/inspector2_activation.png)
+![Activation phase using the script](images/Inspector2_activation.png)
 
 If your Delegated Admininistrator (DA) account is different than your management Organization account, then after step 1, log into your DA account. If not, continue the next steps in the same account.
 You will need to execute the steps 2, 3 and 4 in the DA account as shown in the table below.
@@ -129,7 +129,7 @@ In the DA Account, execute the script with `get_status` to get the Inspector2 ac
 ## 5. Deactivation phase
 For Inspector2 deactivation, you will need to follow the steps below.
 
-![Deactivation phase using the script](images/inspector2_deactivation.png)
+![Deactivation phase using the script](images/Inspector2_deactivation.png)
 
 | N°     | Run the script in | Parameters | Description | 
 | ------ | ------ | ------ | ------ |
