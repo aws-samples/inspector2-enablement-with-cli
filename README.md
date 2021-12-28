@@ -129,7 +129,7 @@ In the DA Account, execute the script with `get_status` to get the Inspector2 ac
 ## 5. Deactivation phase
 For Inspector2 deactivation, you will need to follow the steps below.
 
-![Deactivation phase using the script](images/Inspector2_deactivation.png)
+![Deactivation phase using the script](images/Inspector2_Deactivation.png)
 
 | N°     | Run the script in | Parameters | Description | 
 | ------ | ------ | ------ | ------ |
