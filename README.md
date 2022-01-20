@@ -46,14 +46,14 @@ Attach the [AmazonInspector2FullAccess](https://docs.aws.amazon.com/inspector/la
 ### 2.4. Variables
 #### 2.4.1 Default variables
 Below are the default variables in the script :
-- `$default_auto_enable_conf`       : Configure the scanning type to be enable for new accounts that are attached to the DA. You must always set the value for both ec2 and ecr. By default in the script, the value is set : `auto_enable_conf="ec2=true,ecr=true"`
+- `$default_auto_enable_conf`       : Configure the scanning type to be enable for new accounts that are associated to the DA. You must always set the value for both ec2 and ecr. By default in the script, the value is set : `auto_enable_conf="ec2=true,ecr=true"`
 - `$default_rsstype`                : Inspector2 scanning type to be enable. The default value is set to `"EC2 ECR"`.
 
 #### 2.4.2 Variables to set in the parameters file 
 Below are the variables in the `param_inspector2.json` that you will need to update according to your Organization:
 - `inspector2_da.id`       : AWS Account id you want to designate as Delegated Admin for Amazon Inspector2
 - `scanning_type.selected` : Inspector2 scanning type to be enable. Possible values are "ECR" | "EC2" | "EC2 ECR" (use upper case)
-- `auto_enable.conf`       : Configure the scanning type to be enable for new accounts that are attached to the DA. You must always set the value for both ec2 and ecr, at an least with one of them being true. Example : `auto_enable.conf="ec2=true,ecr=false"`
+- `auto_enable.conf`       : Configure the scanning type to be enable for new accounts that are associated to the DA. You must always set the value for both ec2 and ecr, at an least with one of them being true. Example : `auto_enable.conf="ec2=true,ecr=false"`
 - `regions.enablement`     : The list of AWS regions where you want to enable/disable Amazon Inspector2. Example in the parameters file. If not specified in the file nor found as exported variable, then the script will use the current region.
 
 #### 2.4.3 Export the variables
@@ -69,7 +69,7 @@ At the end of the script execution, unset the variables exported by doing:
 The script runs locally using AWS CLI and works also on CloudShell. Maybe the easiest way to run it, by uploading the scriptsfor the customer. 
 If you have designated an account different than the Management Organization Account as "Delegated Administrator" for Amazon Inspector2, you will need to :
 1. run the script in the Management Organization Account : As per the security principle, only this account can designate another account as admin
-2. run the script (the same one) in the Delegated Administrator account to manage Amazon Inspector2 : enable/disable, configure auto-enable, attach/detach members...
+2. run the script (the same one) in the Delegated Administrator account to manage Amazon Inspector2 : enable/disable, configure auto-enable, associate/disassociate members...
 
 If you have designated the Management Organization account as the Delegated Admininistrator for Amazon Inspector2, then run all the steps of the script in only that account.
 
@@ -88,11 +88,11 @@ Use `-h`or `--help` to see the commands options.
      - A target account(s) is mandatory: `-t members | ACCOUNTID`. Either specified an ACCOUNTID `-t ACCOUNTID` on which scan type will be enabled, or use `-t members` to select all the accounts from AWS Organizations except the DA account on which to enable the scan type. 
      - The scan type is specified `-s ec2|ecr|all`. This is optional, when not specified, then both scans type EC2&ECR will be enabled
      - Example : ```./script.sh -a activate -t members [-s ecr] ```
- 4. `-a auto_enable [-e "ec2=true, ecr=true"]`: configure the automatic activation of Amazon Inspector2 to accounts newly attached to the DA based on the configuration set. 
-     - `-e "ec2=true, ecr=false"` : specified the scan type to enable on each newly attached account. This is optional, when not used, the script will read the value in the parameter file. If nothing is set in the parameters file, then the script will applied the default value of `$default_auto_enable_conf`
- 5. `-a attach -t ACCOUNTID|members`: attach the specified target account(s) to the DA account
- 6. `-a desactivate -t ACCOUNTID|members [-s all]`: deactivate a specified scan for Amazon Inspector2. In order to deactive Amazon Inspector2, all the scan types should be disabled. 
- 7. `-a detach -t ACCOUNTID|members`: Detach a target from the DA. 
+ 4. `-a auto_enable [-e "ec2=true, ecr=true"]`: configure the automatic activation of Amazon Inspector2 to accounts newly associated to the DA based on the configuration set. 
+     - `-e "ec2=true, ecr=false"` : specified the scan type to enable on each newly associated account. This is optional, when not used, the script will read the value in the parameter file. If nothing is set in the parameters file, then the script will applied the default value of `$default_auto_enable_conf`
+ 5. `-a associate -t ACCOUNTID|members`: associate the specified target account(s) to the DA account
+ 6. `-a deactivate -t ACCOUNTID|members [-s all]`: deactivate a specified scan for Amazon Inspector2. In order to deactive Amazon Inspector2, all the scan types should be disabled. 
+ 7. `-a disassociate -t ACCOUNTID|members`: Disassociate a target from the DA. 
  8. `-a remove_admin [-da ACCOUNTID]`: Remove an an account as DA for Amazon Inspector2. 
 
 
@@ -108,7 +108,7 @@ Use `-h`or `--help` to see the commands options.
 ## 4. Activation phase
 Amazon Inspector2 would be enabled in all accounts, regions with the scan type you configured in the variales. 
 
-![Activation phase using the script](images/inspector2_activation.png)
+![Activation phase using the script](Inspector2_activation.png)
 
 If your Delegated Admininistrator (DA) account is different than your management Organization account, then after step 1, log into your DA account. If not, continue the next steps in the same account.
 You will need to execute the steps 2, 3 and 4 in the DA account as shown in the table below.
@@ -118,23 +118,23 @@ Caution: **Wait around 5 minutes** after step 4 to check the status with `get_st
 | ------ | ------ | ------ | ------ |
 | 1   | Management Organization account | `-a delegate_admin -da DA_ACCOUNT_ID` | designate `DA_ACCOUNT_ID` as Inspector2 DA for AWS Organizations |
 | 2   | Delegated Administrator Account | `-a activate -t DA_ACCOUNT_ID -s all` | Activate Inspector2 on the DA account for selected scans: ec2 or ecr or `all` = ec2 & ecr|
-| 3   | Delegated Administrator Account | `-a auto_enable -e "ec2=true, ecr=false" ` | Configure auto-enablement of Inspector2 on the accounts attached to the DA |
-| 4   | Delegated Administrator Account | `-a attach -t members` | Attach the member accounts to the DA account |
+| 3   | Delegated Administrator Account | `-a auto_enable -e "ec2=true, ecr=false" ` | Configure auto-enablement of Inspector2 on the accounts associated to the DA |
+| 4   | Delegated Administrator Account | `-a associate -t members` | Associate the member accounts to the DA account |
 
 Wait a few minutes for the Amazon Inspector2 to be enable in all the accounts and regions configured.
 
-In the DA Account, execute the script with `get_status` to get the Inspector2 activation status of accounts attached to the DA account.
+In the DA Account, execute the script with `get_status` to get the Inspector2 activation status of accounts associated to the DA account.
 
 
 ## 5. Deactivation phase
 For Inspector2 deactivation, you will need to follow the steps below.
 
-![Deactivation phase using the script](images/inspector2_deactivation.png)
+![Deactivation phase using the script](Inspector2_Deactivation.png)
 
 | N°     | Run the script in | Parameters | Description | 
 | ------ | ------ | ------ | ------ |
 | 5   | Delegated Administrator Account | `-a deactivate -t members -s all` | Deactivate a type of scan ec2 or ecr. Or deactivate Inspector2 by removing  `all` = ec2 & ecr scans types from members accounts |
-| 6   | Delegated Administrator Account | `-a detach_members -t members` | Detach the memebers accounts from the DA account|
+| 6   | Delegated Administrator Account | `-a disassociate -t members` | Disassociate the memebers accounts from the DA account|
 | 7   | Delegated Administrator Account | `-a deactivate -t DA_ACCOUNT_ID -s all` | Deactivate Inspector2 on the DA account|
 | 8   | Management Organization account| `-a remove_admin -da DA_ACCOUNT_ID` | Remove DA account  |
 
