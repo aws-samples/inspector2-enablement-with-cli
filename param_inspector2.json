@@ -1,0 +1,18 @@
+{
+    "inspector2_da": {
+        "id":"", 
+        "description":"Delegated Administrator Account ID for Amazon Inspector2. If it is empty, set to the management account."
+        },
+    "scanning_type":{
+        "selected":"EC2 ECR",
+        "description": "Indicates the type of scan to be enabled by Inspector2"
+        },
+    "auto_enable":{
+        "conf":"ec2=false,ecr=true",
+        "description" : "the scanning type to be enabled on every account newly attached to the Delegated Administrator"
+        },
+    "regions": {
+       "enablement": "eu-west-1 eu-west-3 us-east-1",
+       "descriptioin": "List of AWS regions - space separated - where the script will execute Amazon Inspector2 commands"
+    }
+  }
