@@ -114,12 +114,12 @@ You will need to execute the steps 2, 3, 4 and 5 in the DA account as shown in t
 Caution: **Wait around 3 minutes** after step 3 for the association to be completed. You can check the progress through the console while the script is running.
 
 | N°     | Run the script in | Parameters | Description | 
-| ------ | ------ | ------ | ------ |
-| 1   | Management Organization account | `-a delegate_admin -da DA_ACCOUNT_ID` | designate `DA_ACCOUNT_ID` as Inspector2 DA for AWS Organizations |
-| 2   | Delegated Administrator Account | `-a activate -t DA_ACCOUNT_ID -s all` | Activate Inspector2 on the DA account for selected scans: ec2 or ecr or `all` = ec2 & ecr|
-| 3   | Delegated Administrator Account | `-a associate -t members` | Associate the member accounts to the DA account |
-| 4   | Delegated Administrator Account | `-a activate -t members -s all` | Enable Inspector2 on the member accounts for selected scans |
-| 5   | Delegated Administrator Account | `-a auto_enable -e "ec2=true, ecr=true"` | Configure auto-enablement of Inspector2 on accounts newly associated with the DA |
+| ------ | ----------------- | ---------- | ----------- |
+| 1      | Management Organization account | `-a delegate_admin -da DA_ACCOUNT_ID` | designate `DA_ACCOUNT_ID` as Inspector2 DA for AWS Organizations |
+| 2      | Delegated Administrator Account | `-a activate -t DA_ACCOUNT_ID -s all` | Activate Inspector2 on the DA account for selected scans: ec2 or ecr or `all` = ec2 & ecr |
+| 3      | Delegated Administrator Account | `-a associate -t members` | Associate the member accounts to the DA account |
+| 4      | Delegated Administrator Account | `-a activate -t members -s all` | Enable Inspector2 on the member accounts for selected scans |
+| 5      | Delegated Administrator Account | `-a auto_enable -e "ec2=true, ecr=true"` | Configure auto-enablement of Inspector2 on accounts newly associated with the DA |
 Wait a few minutes for the Amazon Inspector2 to be enable in all the accounts and regions configured.
 
 In the DA Account, execute the script with `- a get_status` to get Amazon Inspector2 activation status for all accounts associated.
