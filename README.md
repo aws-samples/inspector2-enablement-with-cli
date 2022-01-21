@@ -120,6 +120,7 @@ Caution: **Wait around 3 minutes** after step 3 for the association to be comple
 | 3      | Delegated Administrator Account | `-a associate -t members` | Associate the member accounts to the DA account |
 | 4      | Delegated Administrator Account | `-a activate -t members -s all` | Enable Inspector2 on the member accounts for selected scans |
 | 5      | Delegated Administrator Account | `-a auto_enable -e "ec2=true, ecr=true"` | Configure auto-enablement of Inspector2 on accounts newly associated with the DA |
+
 Wait a few minutes for the Amazon Inspector2 to be enable in all the accounts and regions configured.
 
 In the DA Account, execute the script with `- a get_status` to get Amazon Inspector2 activation status for all accounts associated.
