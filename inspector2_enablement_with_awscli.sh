@@ -72,7 +72,7 @@ check_aws_cli_version () {
             ;;
         *)
             echo "unknown aws cli version ... EXITING NOW!!!"
-            exit 1;
+            exit 1
         ;;
     esac;
 
@@ -94,12 +94,12 @@ get_regions_list(){
     default_region=""
     if [ "X$INSPECTOR2_REGIONS" == "X" ];then #DA variable not set in as export variable
         if [ -f $params_file ]; then
-            regions_in_file=$(cat $params_file | jq -r '.regions.enablement') 2>&1 >> $tmp_file_execution
+            regions_in_file=$(cat $params_file | jq -r '.regions.enablement') 1>>$tmp_file_execution 2>>$tmp_file_execution
         else    
             regions_in_file=""
         fi
         if [ "X$regions_in_file" == "X"  ]; then # If regions is not set, then will use the current region where the script is executed
-            default_region=$(aws configure list | grep region | awk '{print $2}') 2>&1 >> $tmp_file_execution   
+            default_region=$(aws configure list | grep region | awk '{print $2}') 1>>$tmp_file_execution 2>>$tmp_file_execution   
             regions_to_activate=$default_region
         else
             regions_to_activate=$regions_in_file
@@ -113,7 +113,7 @@ get_regions_list(){
 get_delegated_admin (){
     if [ "X$INSPECTOR2_DA" == "X" ];then #DA variable not set in as export variable
         if [ -f $params_file ]; then
-            da_in_file=$(cat $params_file | jq -r '.inspector2_da.id') 2>&1 >> $tmp_file_execution
+            da_in_file=$(cat $params_file | jq -r '.inspector2_da.id') 1>>$tmp_file_execution 2>>$tmp_file_execution
         else    
             da_in_file=""
         fi
@@ -153,13 +153,12 @@ is_da_account(){
 get_auto_enable_conf(){
 
     if [ -f $params_file ]; then
-        autoenable_in_file=$(cat $params_file | jq -r '.auto_enable.conf') 2>&1 >> $tmp_file_execution
+        autoenable_in_file=$(cat $params_file | jq -r '.auto_enable.conf') 1>>$tmp_file_execution 2>>$tmp_file_execution
     else    
         autoenable_in_file=""
     fi
 
     if [ "X$autoenable_in_file" == "X"  ] || [ "$autoenable_in_file" == "null" ]; then
-        #default_region=$(aws configure list | grep region | awk '{print $2}') 2>&1 >> $tmp_file_execution   
         auto_enable_conf=$default_auto_enable_conf
     else
         auto_enable_conf=$autoenable_in_file
@@ -180,7 +179,7 @@ get_scanning_type (){
             echo $default_rsstype
         else
             if [ -f $params_file ]; then
-                scanning_in_file=$(cat $params_file | jq -r '.scanning_type.selected') 2>&1 >> $tmp_file_execution
+                scanning_in_file=$(cat $params_file | jq -r '.scanning_type.selected') 1>>$tmp_file_execution 2>>$tmp_file_execution
             else    
                 scanning_in_file=""
             fi
@@ -202,7 +201,7 @@ get_scanning_type (){
 check_account_id (){
     check_accid_result=""
     acc_to_check="$1"
-    aws organizations describe-account --account-id $acc_to_check 2>&1 >> $tmp_file_execution 
+    aws organizations describe-account --account-id $acc_to_check 1>>$tmp_file_execution 2>>$tmp_file_execution 
     check_accid_result=$(echo "$?")
     if [ $check_accid_result == "0" ]; then
         echo "0" # good, real | account and members of AWS Org
@@ -216,15 +215,15 @@ get_guide () {
     echo "To manage Amazon Inspector2, use one of the following argument. [ ] is optional."
     echo "Check Status       :  -a get_status"
     echo "Activation phase   :  -a delegate_admin -da ACCOUNT_ID"
-    echo "Activation phase   :  -a activate -t ACCOUNT_ID|members [-s ec2|ecr|all]"
-    echo "Activation phase   :  -a auto_enable [-e \"ec2=true,ecr=true\"]"
+    echo "Activation phase   :  -a activate -t members|ACCOUNT_ID [-s ec2|ecr|all]"
     echo "Activation phase   :  -a associate -t members|ACCOUNT_ID "
-    echo "Deactivation phase :  -a deactivate -t ACCOUNT_ID|members [-s ec2|ecr|all]"
+    echo "Activation phase   :  -a auto_enable [-e \"ec2=true,ecr=true\"]"
+    echo "Deactivation phase :  -a deactivate -t members|ACCOUNT_ID [-s ec2|ecr|all]"
     echo "Deactivation phase :  -a disassociate -t members|ACCOUNT_ID "
     echo "Deactivation phase :  -a remove_admin -da ACCOUNT_ID"
     echo ""
-    echo "Example of execution with dryrun    : $0 get_status --dryrun or $0 get_status -r" 
-    echo "Example of execution without dryrun : $0 get_status"
+    echo "Example of execution with dryrun    : $0 -a get_status --dryrun or $0 -a get_status -r" 
+    echo "Example of execution without dryrun : $0 -a get_status"
     echo "Dry-run is available for each command."
 }
 
@@ -250,20 +249,23 @@ get_target () {
 
 ###############------------------- Functions to get  ----------------------#####################
 #STEP0 : PRE-CHECK|POST-CHECK ACTIVATION STATUS OF AMAZON INSPECTOR2
-# For each | account, and in each listed regions, check if Amazon Inspector2 is enabled
+# For each account, and in each listed regions, check if Amazon Inspector2 is enabled
 check_inspector2_status_per_region () {
     inspector2_account_status=""
     target_to_status=""
     ecr_status=""
     ec2_status=""
+    check_get_code="1"
+    current_acc=$(aws sts get-caller-identity | jq -r '.Account')
+    org_list_account=$(aws organizations list-accounts | jq -r '.Accounts[].Id')
 
     if [ $(is_da_account) == "0" ]
     then 
         #list of accounts on AWS Organizations
-        list_accounts=$(aws organizations list-accounts | jq -r '.Accounts[].Id')
+        list_accounts=$(aws organizations list-accounts | jq -r '.Accounts[].Id') 1>> $tmp_file_execution 2>> $tmp_file_execution
         target_to_status=$list_accounts; #Only the DA can accurately check the status of all accounts
     else
-        target_to_status=$(aws sts get-caller-identity | jq -r '.Account'); #a member will only be able to see its own status
+        target_to_status=$(aws sts get-caller-identity | jq -r '.Account')  #a member will only be able to see its own status
     fi
 
     for i in $target_to_status;  do  
@@ -271,26 +273,27 @@ check_inspector2_status_per_region () {
         echo"";echo " ******** Checking the activation status of Amazon Inspector2 for account $i per regions ******** "
 
         for region in $regions_to_activate; do
-            if [ "$dryrun" = "true" ]
+            if [ "$dryrun" == "true" ]
             then
                 echo "aws inspector2 batch-get-account-status --account-ids $i --region $region"
             else
-                inspector2_account_status=$(aws inspector2 batch-get-account-status --account-ids $i --region $region | jq -r '.accounts[].state.status')  2>&1 >> $tmp_file_execution
-                if  [ "X$inspector2_account_status" = "X" ]; 
-                then 
-                    inspector2_account_status=$(aws inspector2 batch-get-account-status --account-ids $i  --region $region | jq -r '.failedAccounts[].errorCode') 2>&1 >> $tmp_file_execution
-                    if [ "$inspector2_account_status" = "ACCESS_DENIED" ]; 
-                    then 
+                inspector2_account_status=$(aws inspector2 batch-get-account-status --account-ids $i --region $region | jq -r '.accounts[].state.status')  
+                if  [ "X$inspector2_account_status" == "X" ]; then 
+                    inspector2_account_status=$(aws inspector2 batch-get-account-status --account-ids $i  --region $region | jq -r '.failedAccounts[].errorCode') 
+                    if [ "$inspector2_account_status" == "ACCESS_DENIED" ]; then 
                         echo "For Account $i in $region: Amazon Inspector2 status is DISASSOCIATED."; 
                     else
-                        ecr_status=$(aws inspector2 batch-get-account-status --account-ids  $i  --region $region | jq -r '.accounts[].resourceState.ecr.status')  2>&1 >> $tmp_file_execution
-                        ec2_status=$(aws inspector2 batch-get-account-status --account-ids  $i  --region $region | jq -r '.accounts[].resourceState.ec2.status')  2>&1 >> $tmp_file_execution
+                        ecr_status=$(aws inspector2 batch-get-account-status --account-ids  $i  --region $region | jq -r '.accounts[].resourceState.ecr.status')  1>> $tmp_file_execution 2>> $tmp_file_execution
+                        ec2_status=$(aws inspector2 batch-get-account-status --account-ids  $i  --region $region | jq -r '.accounts[].resourceState.ec2.status') 1>> $tmp_file_execution 2>> $tmp_file_execution
                         echo "For Account $i in $region: Amazon Inspector2 status is $inspector2_account_status - ECR is $ecr_status - EC2 is $ec2_status";
-                    fi;
+                    fi
+                elif  [ "$inspector2_account_status" == "DISABLED" ]; then 
+                    ecr_status="DISABLED";ec2_status="DISABLED"
+                    echo "For Account $i in $region: Amazon Inspector2 status is $inspector2_account_status - ECR is $ecr_status - EC2 is $ec2_status"
                 else
-                    ecr_status=$(aws inspector2 batch-get-account-status --account-ids  $i  --region $region | jq -r '.accounts[].resourceState.ecr.status')  2>&1 >> $tmp_file_execution
-                    ec2_status=$(aws inspector2 batch-get-account-status --account-ids  $i  --region $region | jq -r '.accounts[].resourceState.ec2.status')  2>&1 >> $tmp_file_execution
-                    echo "For Account $i in $region: Amazon Inspector2 status is $inspector2_account_status - ECR is $ecr_status - EC2 is $ec2_status";
+                    ecr_status=$(aws inspector2 batch-get-account-status --account-ids  $i  --region $region | jq -r '.accounts[].resourceState.ecr.status')  1>> $tmp_file_execution 2>> $tmp_file_execution
+                    ec2_status=$(aws inspector2 batch-get-account-status --account-ids  $i  --region $region | jq -r '.accounts[].resourceState.ec2.status')  1>> $tmp_file_execution 2>> $tmp_file_execution
+                    echo "For Account $i in $region: Amazon Inspector2 status is $inspector2_account_status - ECR is $ecr_status - EC2 is $ec2_status"
                 fi;
                 inspector2_account_status=""
                 ecr_status=""
@@ -335,13 +338,12 @@ enable_inspector2_per_region() {
             echo "aws inspector2 enable --account-ids [ACCOUNTS_LIST] --resource-types $scantype2activate --region $region"
         else
             if [ $is_da == "0" ]; then
-                echo "Enabling Inspector2 in accounts for the scanning type $scantype2activate in region $region;"
-                aws inspector2 enable --account-ids $target_to_activate --resource-types $scantype2activate --region $region 2>&1 >> $tmp_file_execution; sleep 0.2
+                echo "Attemting to enable Inspector2 in accounts for the scanning type $scantype2activate in region $region;"
+                aws inspector2 enable --account-ids $target_to_activate --resource-types $scantype2activate --region $region 1>> $tmp_file_execution 2>> $tmp_file_execution; sleep 0.2
             else
                 echo "Log in DA account to enable Amazon Inspector2 on $target_to_activate account(s)."
             fi
         fi
-        sleep 0.1
     done
 }
 
@@ -350,7 +352,12 @@ enable_inspector2_per_region() {
 attach_member_to_inspector2_admin_per_region () {
     target=""
     argument_target=$1
-
+    check=""
+    deleg_admin_found=""
+    target=""
+    argument_target=$1
+    current_acc=""
+    #Exit if the current account is not the DA, since the association must be done by the DA account
     if [ "$(is_da_account)" != "0" ]; then 
         # If it is not the DA account, then exit with error
         echo "Can only be done from the delegated admin (DA) account! Please log in your DA account."
@@ -359,48 +366,40 @@ attach_member_to_inspector2_admin_per_region () {
    
     #########--------->Target to apply the action on
     target=$(get_target $argument_target)
-    if [ "$target" == "1" ] || [ "$target" == "admin" ] || [ "$target" == "$del_admin_inspector" ] ; then
-        echo "Unexpected argument passed. Argument expected : members|account-id. Run : "
-        echo "$0 -a $actionselected -t members|account-id"
+    current_acc=$(aws sts get-caller-identity | jq -r '.Account')
+    if [ "$target" == "1" ] || [ "$target" == "admin" ] || [ "$target" == "$current_acc" ] ; then
+        echo "Unexpected argument passed. Argument expected : members|account-id. Please see the execution file. "
         exit 1
     fi
 
     for i in $target;  do  
-        echo"";echo " ******** Checking the member status of Amazon Inspector2 for | account $i per regions ******** "
+        echo"";echo " ******** Checking the member status of Amazon Inspector2 for account $i per regions ******** "
         for region in $regions_to_activate; do
-            if [ "$dryrun" = "true" ]
+            if [ "$dryrun" == "true" ]
             then
                 echo "aws inspector2 associate-member --account-id $i --region $region"
             else
-                aws inspector2 get-member --account-id $i --region $region 2>&1 >> $tmp_file_execution 
+                aws inspector2 get-member --account-id $i --region $region 1>>$tmp_file_execution 2>>$tmp_file_execution 
                 check="$?"
                 sleep 0.2
-                case ${check} in  
-                "254" | "255") #Error code
-                    echo "Account $i might NOT be associated with the administrator in region $region. Associating now...!"
-                    aws inspector2 associate-member --account-id $i --region $region 2>&1 >> $tmp_file_execution 
-                    sleep 0.1
-                ;;
-                "0") # Proper execution
+                if [ "$check" == "0" ];then  # Proper execution
                     deleg_admin_found=$(aws inspector2 get-member --account-id $i --region $region | jq -r '.member.relationshipStatus')
-                    if [ $deleg_admin_found = "REMOVED" ]
+                    if [ $deleg_admin_found == "REMOVED" ]
                     then 
-                        echo "Associating account $i to Inspector2 Administrator in region $region"
-                        aws inspector2 associate-member --account-id $i --region $region 2>&1 >> $tmp_file_execution
+                        echo "Attempting to associate account $i to Inspector2 Administrator in region $region"
+                        aws inspector2 associate-member --account-id $i --region $region 1>>$tmp_file_execution 2>>$tmp_file_execution
                         sleep 0.1
                     else
-                        echo "Account $i is already associated to administrator $deleg_admin_found in region $region."
+                        echo "Account $i is might be associated to administrator in region $region. Please see the execution file."
                     fi;
                     deleg_admin_found=""
-                ;;
-                *) # Unknow execution code
-                    echo "aws inspector2 get-member --account-id $i --region $region returns $check unknown error code."
-                ;;
-                esac
+                else # Unknow execution code
+                    echo "aws inspector2 get-member --account-id $i --region $region returns $check error code. Please see the execution file."
+                fi
             fi
+            check=""
         done
-        sleep 0.2;
-    done;
+    done
 }
    
 
@@ -408,8 +407,8 @@ attach_member_to_inspector2_admin_per_region () {
 designated_delegated_admin_for_inspector2(){
     check_accid=""
     local_del_admin=""
+    current_acc=""
     if [ "x$1" == "x" ];then #No argument given with -da option
-        #local_del_admin="$del_admin_inspector" #use the variable set as global
         local_del_admin=$(get_delegated_admin)
     else
         local_del_admin="$1" #use the argupment given with -da
@@ -433,17 +432,18 @@ designated_delegated_admin_for_inspector2(){
             else
                 if [ $current_acc == $master_account ]
                 then 
-                    echo "Assigning $local_del_admin as Inspector2 Administrator Account in region $region."
-                    aws inspector2 enable-delegated-admin-account --delegated-admin-account-id $local_del_admin --region $region 2>&1 >> $tmp_file_execution   
+                    echo "Attempting to assign $local_del_admin as Inspector2 Administrator Account in region $region."
+                    aws inspector2 enable-delegated-admin-account --delegated-admin-account-id $local_del_admin --region $region 1>>$tmp_file_execution 2>>$tmp_file_execution                    
                 else
                     echo "Please log as in the master account $master_account to successfully executed this command."
                 fi
             fi
-            sleep 0.2
+            sleep 0.1
         done
+        echo "";echo "Run \"aws inspector2 list-delegated-admin-accounts\" to check the result."
     else        
-        echo "--------- CAUTION ---------"; echo "You provided an accountid $local_del_admin that does not match the required pattern or does not belong to your organization." 
-        echo "export INSPECTOR2_DA=\"DA_ACCOUNTID\" or set the right account id in $0 -a $actionselected -da DA_ACCOUNTID";
+        echo "--------- CAUTION ---------"; echo "You provided an accountid $local_del_admin that does not meet the requirements. Please see the execution file." 
+        echo "export INSPECTOR2_DA=\"DA_ACCOUNTID\" or set the right account id in $0 -a $actionselected -da DA_ACCOUNTID or check your permissions";
     fi
 
  }   
@@ -456,7 +456,7 @@ autoenable_inspector2_for_new_accounts() {
         #Set value in global variable $regions_to_activate to be used all over the script for all the actions
         get_auto_enable_conf
     else
-        echo "$1" | grep "ec2" | grep "ecr" | grep "true"   2>&1 >> $tmp_file_execution
+        echo "$1" | grep "ec2" | grep "ecr" | grep "true"  1>>$tmp_file_execution 2>>$tmp_file_execution
         check_result=$(echo "$?")
         if [ "$check_result" == "0" ]; then
             auto_enable_conf="$1"
@@ -471,18 +471,17 @@ autoenable_inspector2_for_new_accounts() {
         then
             echo "aws inspector2 update-organization-configuration --auto-enable $auto_enable_conf --region $region"
         else
-            if [ "$(is_da_account)" == "0" ]
+            if [ "$(is_da_account $region)" == "0" ]
             then 
-                echo "Configuring auto-enablement of Inspector2 in new accounts in region : $region"
-                aws inspector2 update-organization-configuration --auto-enable $auto_enable_conf --region $region 2>&1 >> $tmp_file_execution
+                echo "Attempting to configure auto-enablement of Inspector2 in new accounts in region : $region"
+                aws inspector2 update-organization-configuration --auto-enable $auto_enable_conf --region $region 1>>$tmp_file_execution 2>>$tmp_file_execution
             else
-                echo "Log into Delegated Admin account to proceed with Inspector2 auto-enablement."
+                echo "Log into Delegated Admin account to proceed with Inspector2 auto-enablement.";echo "";echo ""
                 exit
             fi
         fi
         sleep 0.2    
     done
-    
 }
 
 
@@ -490,7 +489,7 @@ autoenable_inspector2_for_new_accounts() {
 
 ####DEACTIVATION DE INSPECTOR in ACCOUNTS, per SCANNING TYPE and in ALL REGIONS
 disable_inspector2_per_region() {
-    target_to_deactivate=""
+     target_to_deactivate=""
     argument_deactivate=$1
     scantype2deactivate=""
     scan2deactivate=$2
@@ -509,27 +508,33 @@ disable_inspector2_per_region() {
     fi
 
     echo"";echo " ******** Deactivation of Amazon Inspector2 for accounts listed below per regions ******** "
-    echo "Account(s): $target_to_deactivate";echo""
-    is_da="$(is_da_account)"
+    echo "[ACCOUNTS_LIST]: "$target_to_deactivate;echo""
 
     for region in $regions_to_activate; do
-        if [ "$dryrun" = "true" ]
-        then echo "aws inspector2 disable --account-ids [ACCOUNTS_LISTED_ABOVE] --resource-types $scantype2deactivate --region $region; "
+        if [ "$dryrun" == "true" ]
+        then echo "aws inspector2 disable --account-ids [ACCOUNTS_LIST] --resource-types $scantype2deactivate --region $region; "
         else 
-                if [ $is_da == "0" ]; then
-                echo "Disabling Amazon Inspector2 in accounts [ACCOUNTS_LISTED_ABOVE] for scanning type $scantype2deactivate  in region $region."
-                aws inspector2 disable --account-ids $target_to_deactivate --resource-types $scantype2deactivate --region $region  2>&1 >> $tmp_file_execution; sleep 0.2 
+            if [ "$(is_da_account)" == "0" ]; then
+                echo "Attemtping to disable Amazon Inspector2 in accounts [ACCOUNTS_LIST] for scanning type $scantype2deactivate  in region $region."
+                aws inspector2 disable --account-ids $target_to_deactivate --resource-types $scantype2deactivate --region $region  1>> $tmp_file_execution 2>> $tmp_file_execution; sleep 0.2 
             else
                 echo "Log in DA account to disable Amazon Inspector2 on $target_to_activate account(s)."
             fi
-        fi  
-        sleep 0.1                 
+        fi               
     done
+
+ 
  } 
 
 
 ###### DISASSOCIATION ACCOUNTS TO ANY MASTER IN THE LISTED REGIONS
 detach_members_to_designated_admin_inspector2 (){
+    target=""
+    argument_target=$1
+    memberstatus=""
+    membership_status=""
+    current_acc=""
+
     target=""
     argument_target=$1
    
@@ -541,9 +546,9 @@ detach_members_to_designated_admin_inspector2 (){
    
     #########--------->Target to apply the action on
     target=$(get_target $argument_target)
-    if [ "$target" == "1" ] || [ "$target" == "admin" ]; then
-        echo "Unexpected argument passed. Argument expected : members | account-id. Run : "
-        echo "$0 -a $actionselected -t members|account-id"
+    current_acc=$(aws sts get-caller-identity | jq -r '.Account')
+    if [ "$target" == "1" ] || [ "$target" == "admin" ] || [ "$target" == "current_acc" ] ; then
+        echo "Unexpected argument passed. Argument expected : members | account-id. Please at the execution file. "
         exit 1
     fi
 
@@ -553,36 +558,38 @@ detach_members_to_designated_admin_inspector2 (){
             if [ "$dryrun" = "true" ]; then
                 echo "aws inspector2 disassociate-member --account-id $i --region $region"
             else    
-                aws inspector2 get-member --account-id $i --region $region 2>&1 >> $tmp_file_execution
+                aws inspector2 get-member --account-id $i --region $region 1>> $tmp_file_execution 2>> $tmp_file_execution
                 memberstatus="$?"
                 case ${memberstatus} in  
                 "254" | "255") # error code : no need to disassociate
                     echo "Account $i in : $region is not associated to any master"
                 ;;
                 "0") #normal execution                        
-                    membership_status=$(aws inspector2 get-member --account-id $i --region $region | jq -r '.member.relationshipStatus')
+                    membership_status=$(aws inspector2 get-member --account-id $i --region $region | jq -r '.member.relationshipStatus') 1>> $tmp_file_execution 2>> $tmp_file_execution; sleep 0.1
                     if [ "$membership_status" = "REMOVED" ]
                     then 
                         echo "Account $i in : region $region is no longer associated to the administator"
                     else 
-                        echo "Disassociating this account $i to master in : $region."
-                        aws inspector2 disassociate-member --account-id $i --region $region  2>&1 >> $tmp_file_execution
+                        echo "Attempting to disassociate this account $i from DA in : $region."
+                        aws inspector2 disassociate-member --account-id $i --region $region 1>> $tmp_file_execution 2>> $tmp_file_execution;sleep 0.1
                     fi;
                     membership_status=""
                 ;;
                 *)
-                    echo "Unknow error code : $membership_status"
+                    echo "Unknow error code : $membership_status. Please see the execution file."
                 ;;
                 esac
             fi              
         done
     done
+
+
  } 
 
 
 ## REMOVE INSPECTOR2 DELEGATED ADMINISTRATOR
 remove_delegated_admin_for_inspector2(){
-    #Master | account of AWS Organizations from where the delegation of admin can take place
+    #Master account of AWS Organizations from where the delegation of admin can take place
     
     check_accid=""
     local_del_admin=""
@@ -612,18 +619,19 @@ remove_delegated_admin_for_inspector2(){
             else
                 if [ $current_acc == $master_account ]
                 then 
-                    aws inspector2 disable-delegated-admin-account --delegated-admin-account-id $local_del_admin --region $region 2>&1 >> $tmp_file_execution
+                    echo "Attempting to remove $local_del_admin as delegated administrator in region $region "
+                    aws inspector2 disable-delegated-admin-account --delegated-admin-account-id $local_del_admin --region $region 1>>$tmp_file_execution 2>>$tmp_file_execution
                 else
                     echo "Please log as in the master account $master_account to successfully executed this command in region : $region."
                 fi
             fi
-            sleep 0.2
+            sleep 0.1
         done
+        echo "";echo "Run \"aws inspector2 list-delegated-admin-accounts\" to check the result."
     else        
-        echo "--------- CAUTION ---------"; echo "You provided an accountid $local_del_admin that does not match the required pattern or does not belong to your organization." 
+       echo "--------- CAUTION ---------"; echo "You provided an accountid $local_del_admin that does not meet the requirements. Please see the execution file."
         echo "export INSPECTOR2_DA=\"DA_ACCOUNTID\" or set the right account id in $0 -a $actionselected -da accountid";
     fi
-
  }
 
 
@@ -655,7 +663,7 @@ while [[ "$#" -gt 0 ]]; do
                 shift; shift
             ;;
         "-t"|"--target") 
-                targetselected="$2";  #echo "targetselected=$targetselected"
+                targetselected="$2"
                 case $targetselected in 
                     " " | "" | "-r" | "--dry-run" | "-a" | "-s")
                         echo "The target is not set. Restart with : $0 -a $actionselected -t accountid|members";
@@ -667,7 +675,7 @@ while [[ "$#" -gt 0 ]]; do
                 esac
             ;;
         "-s"|"--scanning") 
-                scanningselected="$2"; #echo "1=$1 - 2=$2"; 
+                scanningselected="$2"
                 if [ "x$scanningselected" == "x" ] || [ "$scanningselected" == "--dry-run" ] || [ "$scanningselected" == "-r" ];then 
                     echo "The scanning is not set. Default value applied : $default_rsstype"
                     scanningselected="" #reinitialization the variable scan type
@@ -677,7 +685,7 @@ while [[ "$#" -gt 0 ]]; do
                 fi;
             ;;
         "-e"|"--auto-enable") 
-                autoconfselected="$2"; #echo "1=$1 - 2=$2"; 
+                autoconfselected="$2"
                 if [ "x$autoconfselected" == "x" ] || [ "$autoconfselected" == "--dry-run" ] || [ "$autoconfselected" == "-r" ];then 
                     echo "The auto-enablement configuration is not set. Default value applied : $default_auto_enable_conf"
                     autoconfselected="" #reinitialization the variable auto-enable
@@ -692,7 +700,6 @@ while [[ "$#" -gt 0 ]]; do
             actionselected="-h"
             get_guide ## Information on how to use the script
             exit 1
-            #shift
             ;;
         *) echo "Unknown parameter passed: $1"; exit 1 ;;
     esac
@@ -704,7 +711,7 @@ if [ "$dryrunselected" == "--dry-run" ]
 then 
     dryrun="true"
     echo "< -------------------------------- Dry Running -------------------------------- >"
-fi;
+fi
 
 
 date >> $tmp_file_execution
@@ -754,7 +761,7 @@ case $actionselected in
         exit 1
     ;;
 esac
-echo "";echo ""
+echo "";date >> $tmp_file_execution; echo ""
 echo "Execution details here: $tmp_file_execution"
 echo ""
 exit 0
