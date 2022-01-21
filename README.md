@@ -88,9 +88,9 @@ Use `-h`or `--help` to see the commands options.
      - A target account(s) is mandatory: `-t members | ACCOUNTID`. Either specified an ACCOUNTID `-t ACCOUNTID` on which scan type will be enabled, or use `-t members` to select all the accounts from AWS Organizations except the DA account on which to enable the scan type. 
      - The scan type is specified `-s ec2|ecr|all`. This is optional, when not specified, then both scans type EC2&ECR will be enabled
      - Example : ```./script.sh -a activate -t members [-s ecr] ```
- 4. `-a auto_enable [-e "ec2=true, ecr=true"]`: configure the automatic activation of Amazon Inspector2 to accounts newly associated to the DA based on the configuration set. 
+ 4. `-a associate -t ACCOUNTID|members`: associate the specified target account(s) to the DA account
      - `-e "ec2=true, ecr=false"` : specified the scan type to enable on each newly associated account. This is optional, when not used, the script will read the value in the parameter file. If nothing is set in the parameters file, then the script will applied the default value of `$default_auto_enable_conf`
- 5. `-a associate -t ACCOUNTID|members`: associate the specified target account(s) to the DA account
+ 5. `-a auto_enable [-e "ec2=true, ecr=true"]`: configure the automatic activation of Amazon Inspector2 to accounts newly associated to the DA based on the configuration set. 
  6. `-a deactivate -t ACCOUNTID|members [-s all]`: deactivate a specified scan for Amazon Inspector2. In order to deactive Amazon Inspector2, all the scan types should be disabled. 
  7. `-a disassociate -t ACCOUNTID|members`: Disassociate a target from the DA. 
  8. `-a remove_admin [-da ACCOUNTID]`: Remove an an account as DA for Amazon Inspector2. 
@@ -107,48 +107,41 @@ Use `-h`or `--help` to see the commands options.
 
 ## 4. Activation phase
 Amazon Inspector2 would be enabled in all accounts, regions with the scan type you configured in the variales. 
-
-<<<<<<< HEAD
-![Activation phase using the script](Inspector2_activation.png)
-=======
 ![Activation phase using the script](images/Inspector2_activation.png)
->>>>>>> 67a4bc025c8327d44be00445071bbd27960df750
 
 If your Delegated Admininistrator (DA) account is different than your management Organization account, then after step 1, log into your DA account. If not, continue the next steps in the same account.
-You will need to execute the steps 2, 3 and 4 in the DA account as shown in the table below.
-Caution: **Wait around 5 minutes** after step 4 to check the status with `get_status`. You can check the progress through the console while the script is running.
+You will need to execute the steps 2, 3, 4 and 5 in the DA account as shown in the table below.
+Caution: **Wait around 3 minutes** after step 3 for the association to be completed. You can check the progress through the console while the script is running.
 
 | N°     | Run the script in | Parameters | Description | 
 | ------ | ------ | ------ | ------ |
 | 1   | Management Organization account | `-a delegate_admin -da DA_ACCOUNT_ID` | designate `DA_ACCOUNT_ID` as Inspector2 DA for AWS Organizations |
 | 2   | Delegated Administrator Account | `-a activate -t DA_ACCOUNT_ID -s all` | Activate Inspector2 on the DA account for selected scans: ec2 or ecr or `all` = ec2 & ecr|
-| 3   | Delegated Administrator Account | `-a auto_enable -e "ec2=true, ecr=false" ` | Configure auto-enablement of Inspector2 on the accounts associated to the DA |
-| 4   | Delegated Administrator Account | `-a associate -t members` | Associate the member accounts to the DA account |
-
+| 3   | Delegated Administrator Account | `-a associate -t members` | Associate the member accounts to the DA account |
+| 4   | Delegated Administrator Account | `-a activate -t members -s all` | Enable Inspector2 on the member accounts for selected scans |
+| 5   | Delegated Administrator Account | `-a auto_enable -e "ec2=true, ecr=true"` | Configure auto-enablement of Inspector2 on accounts newly associated with the DA |
 Wait a few minutes for the Amazon Inspector2 to be enable in all the accounts and regions configured.
 
-In the DA Account, execute the script with `get_status` to get the Inspector2 activation status of accounts associated to the DA account.
+In the DA Account, execute the script with `- a get_status` to get Amazon Inspector2 activation status for all accounts associated.
 
 
 ## 5. Deactivation phase
-For Inspector2 deactivation, you will need to follow the steps below.
+For Amazon Inspector2 deactivation, you will need to follow the steps below.
 
-<<<<<<< HEAD
-![Deactivation phase using the script](Inspector2_Deactivation.png)
-=======
 ![Deactivation phase using the script](images/Inspector2_Deactivation.png)
->>>>>>> 67a4bc025c8327d44be00445071bbd27960df750
 
 | N°     | Run the script in | Parameters | Description | 
 | ------ | ------ | ------ | ------ |
-| 5   | Delegated Administrator Account | `-a deactivate -t members -s all` | Deactivate a type of scan ec2 or ecr. Or deactivate Inspector2 by removing  `all` = ec2 & ecr scans types from members accounts |
-| 6   | Delegated Administrator Account | `-a disassociate -t members` | Disassociate the memebers accounts from the DA account|
-| 7   | Delegated Administrator Account | `-a deactivate -t DA_ACCOUNT_ID -s all` | Deactivate Inspector2 on the DA account|
-| 8   | Management Organization account| `-a remove_admin -da DA_ACCOUNT_ID` | Remove DA account  |
+| 6   | Delegated Administrator Account | `-a deactivate -t members -s all` | Deactivate a type of scan ec2 or ecr. Or deactivate Inspector2 by removing  `all` = ec2 & ecr scans types from members accounts |
+| 7   | Delegated Administrator Account | `-a disassociate -t members` | Disassociate the memebers accounts from the DA account|
+| 8   | Delegated Administrator Account | `-a deactivate -t DA_ACCOUNT_ID -s all` | Deactivate Inspector2 on the DA account|
+| 9   | Management Organization account | `-a remove_admin -da DA_ACCOUNT_ID` | Remove DA account  |
 
-Wait around 5 minutes after step 5 and then check the status with `get_status`. Most accounts should now have "DISABLING" as status for the scan you deactivated.
-Optionally, wait around 5 minutes after step 6 and then check the status with `get_status`. Most accounts should now have "DISASSOCIATED" as status for the scan you deactivated.
-Connect to the Management Organization account for step 8.
+Caution: **Wait around 3 minutes** after step 6 for the association to be completed. You can check the progress through the console while the script is running.
+
+Wait around 5 minutes after step 6 then check the status with `-a get_status`. Most accounts should now have "DISABLING" or "DISABLED" as status for the scan(s) you deactivated.
+Optionally, wait around 5 minutes after step 7 and then check the status with `-a get_status`. Most accounts should now have "DISASSOCIATED" as status.
+Connect into the Management Organization account for step 9.
 
 
 ## Security
