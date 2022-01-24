@@ -13,6 +13,6 @@
         },
     "regions": {
        "enablement": "eu-west-1 eu-west-3 us-east-1 us-east-2",
-       "descriptioin": "List of AWS regions - space separated - where the script will execute Amazon Inspector2 commands"
+       "description": "List of AWS regions - space separated - where the script will execute Amazon Inspector2 commands"
     }
   }
