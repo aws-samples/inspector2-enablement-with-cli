@@ -603,7 +603,7 @@ remove_delegated_admin_for_inspector2(){
             fi
             sleep 0.1
         done
-        echo "";echo "Use the console or Run \"aws inspector2 list-delegated-admin-accounts\" to check the result."
+        echo "";echo "CAUTION: If you are sure you want to remove the DA at the organization level for all regions run \"aws organizations deregister-delegated-administrator --service-principal inspector2.amazonaws.com --account-id $local_del_admin\"."
     else        
        echo "--------- CAUTION ---------"; echo "You provided an accountid $local_del_admin that does not meet the requirements. Please see the execution file."
         echo "export INSPECTOR2_DA=\"DA_ACCOUNTID\" or set the right account id in $0 -a $actionselected -da accountid";
