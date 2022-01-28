@@ -76,7 +76,7 @@ If you have designated the Management Organization account as the Delegated Admi
 ### 3.1. script parameters
 1. If you run the script with no parameters you will see the list of options.
 ```
-./script.sh 
+./inspector2_enablement_with_awscli.sh 
 ```
 Use `-h`or `--help` to see the commands options.
 
@@ -87,7 +87,7 @@ Use `-h`or `--help` to see the commands options.
   3. `-a activate -t ACCOUNTID|members [-s all]`: Activate a scan type in regions. The other options are the following:
      - A target account(s) is mandatory: `-t members | ACCOUNTID`. Either specified an ACCOUNTID `-t ACCOUNTID` on which scan type will be enabled, or use `-t members` to select all the accounts from AWS Organizations except the DA account on which to enable the scan type. 
      - The scan type is specified `-s ec2|ecr|all`. This is optional, when not specified, then both scans type EC2&ECR will be enabled
-     - Example : ```./script.sh -a activate -t members [-s ecr] ```
+     - Example : ```./inspector2_enablement_with_awscli.sh -a activate -t members [-s ecr] ```
  4. `-a associate -t ACCOUNTID|members`: associate the specified target account(s) to the DA account
      - `-e "ec2=true, ecr=false"` : specified the scan type to enable on each newly associated account. This is optional, when not used, the script will read the value in the parameter file. If nothing is set in the parameters file, then the script will applied the default value of `$default_auto_enable_conf`
  5. `-a auto_enable [-e "ec2=true, ecr=true"]`: configure the automatic activation of Amazon Inspector2 to accounts newly associated to the DA based on the configuration set. 
