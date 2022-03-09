@@ -89,11 +89,13 @@ Use `-h`or `--help` to see the commands options.
      - The scan type is specified `-s ec2|ecr|all`. This is optional, when not specified, then both scans type EC2&ECR will be enabled
      - Example : ```./inspector2_enablement_with_awscli.sh -a activate -t members [-s ecr] ```
  4. `-a associate -t ACCOUNTID|members`: associate the specified target account(s) to the DA account
-     - `-e "ec2=true, ecr=false"` : specified the scan type to enable on each newly associated account. This is optional, when not used, the script will read the value in the parameter file. If nothing is set in the parameters file, then the script will applied the default value of `$default_auto_enable_conf`
+    
  5. `-a auto_enable [-e "ec2=true, ecr=true"]`: configure the automatic activation of Amazon Inspector2 to accounts newly associated to the DA based on the configuration set. 
- 6. `-a deactivate -t ACCOUNTID|members [-s all]`: deactivate a specified scan for Amazon Inspector2. In order to deactive Amazon Inspector2, all the scan types should be disabled. 
- 7. `-a disassociate -t ACCOUNTID|members`: Disassociate a target from the DA. 
- 8. `-a remove_admin [-da ACCOUNTID]`: Remove an an account as DA for Amazon Inspector2. 
+  - `-e "ec2=true, ecr=false"` : specified the scan type to enable on each newly associated account. This is optional, when not used, the script will read the value in the parameter file. If nothing is set in the parameters file, then the script will applied the default value of `$default_auto_enable_conf`
+  
+ 7. `-a deactivate -t ACCOUNTID|members [-s all]`: deactivate a specified scan for Amazon Inspector2. In order to deactive Amazon Inspector2, all the scan types should be disabled. 
+ 8. `-a disassociate -t ACCOUNTID|members`: Disassociate a target from the DA. 
+ 9. `-a remove_admin [-da ACCOUNTID]`: Remove an an account as DA for Amazon Inspector2. 
 
 
 ### 3.2. Dry run
