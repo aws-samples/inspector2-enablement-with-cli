@@ -100,9 +100,9 @@ Use `-h`or `--help` to see the commands options.
 `--dry-run` | `-r` option is available for each command. 
 
 ### 3.3. Example of script usage
-`./inspector2_enablement_with_awscli.sh delegate_admin -da ACCOUNTD_ID --dry-run`
+`./inspector2_enablement_with_awscli.sh -a delegate_admin -da ACCOUNTD_ID --dry-run`
 
- `./inspector2_enablement_with_awscli.sh activate -t ACCOUNT_ID -s all `
+ `./inspector2_enablement_with_awscli.sh -a activate -t ACCOUNT_ID -s all `
 
 
 ## 4. Activation phase
