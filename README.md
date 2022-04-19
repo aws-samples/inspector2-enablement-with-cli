@@ -110,26 +110,36 @@ Use `-h`or `--help` to see the commands options.
 ### 3.2. Dry run
 `--dry-run` | `-r` option is available for each command. 
 
-### 3.3. Example of script usage
-- (Dry run) Delegate `ACCOUNT_ID` as administrator for Amazon Inspector2:
-```
-./inspector2_enablement_with_awscli.sh -a delegate_admin -da ACCOUNTD_ID --dry-run
-```
+Below, examples of script usage with Dry run:
 
-- (Dry run) Check the Inspector2 activation status per account/per region:
+#### 3.2.0.(Dry run) Check the Inspector2 activation status per account/per region:
 ```
 ./inspector2_enablement_with_awscli.sh -a get_status -r
 ```
 
-- (Dry run) Associate `all members` accounts to Amazon Inspector2 Delegated administrator :
+#### 3.2.1.(Dry run) Delegate `ACCOUNT_ID` as administrator for Amazon Inspector2:
+```
+./inspector2_enablement_with_awscli.sh -a delegate_admin -da ACCOUNTD_ID --dry-run
+```
+
+#### 3.2.1.(Dry run) Activate Amazon Inspector2 on the delegated administrator account `ACCOUNT_ID` :
+```
+./inspector2_enablement_with_awscli.sh -a activate -t ACCOUNTD_ID -s all -r
+```
+
+#### 3.2.3.(Dry run) Associate `all members` accounts to Amazon Inspector2 Delegated administrator :
 ```
 ./inspector2_enablement_with_awscli.sh -a associate -t members --dry-run
 ```
 
-- (Dry run) Activate Amazon Inspector2 for EC2 and ECR scans on all accounts : 
+#### 3.2.4. (Dry run) Activate Amazon Inspector2 for EC2 and ECR scans on all accounts : 
 ```
 ./inspector2_enablement_with_awscli.sh -a activate -t members -s all -r
 ```
+
+### 3.3. Execution without dry run
+Ensure you have remove the dry-run option when you are running the commands of your choice.
+
 
 
 ## 4. Activation phase
