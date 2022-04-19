@@ -15,7 +15,7 @@ Below the prerequites in order to successfully run the script to deploy Amazon I
 Using this script, it is assumed you have met the prerequites in the Amazon Inspector2 [official documentation](https://docs.aws.amazon.com/inspector/latest/user/getting_started_tutorial.html). 
 
 ### 2.1. AWS CLI 
-Note: You can use AWS CloudShell.
+Note: You can use [AWS CloudShell](https://docs.aws.amazon.com/cloudshell/latest/userguide/getting-started.html).
 
 #### 2.1.1.  AWS CLI version
 The below versions at the minimum expected to use Amazon Inspector2 CLI reference:
@@ -26,6 +26,15 @@ Note : The script works with CLI version 1 and CLI version 2. The script checks 
 
 #### 2.1.2.  jq
 `jq` is used in the script, so please install [jq](https://stedolan.github.io/jq/download/). 
+
+#### 2.1.3.  [OPTIONAL] Using AWS CloudShell
+Launch AWS CloudShell required AWS accounts and in a region that support it as described on [this page](https://docs.aws.amazon.com/cloudshell/latest/userguide/getting-started.html).
+
+Download the code by executing on CloudShell:
+
+```
+git clone https://github.com/aws-samples/inspector2-enablement-with-cli.git
+```
 
 ### 2.2. AWS Organizations
 AWS Organizations is mandatory. The delegation of Amazon Inspector2 Delegated Administrator (DA) can only be done from the managment account.
@@ -81,8 +90,8 @@ If you have designated the Management Organization account as the Delegated Admi
 Use `-h`or `--help` to see the commands options.
 
 2. The list of actions that can be performed with the script require `-a` or `--action`. It is a mandatory option.
-  1. `-a get_status` : Check the enablement status of Amazon Inspector per regions and per scan type. When run from the delegated admin (DA) account, return the status of all the AWS Organizations. If run from an account different than the DA, than return the status only for that account.
-  2. `-a designate_admin [-da ACCOUNTID]`: Designate one account as DA on regions specified. 
+  1. ```-a get_status ``` : Check the enablement status of Amazon Inspector per regions and per scan type. When run from the delegated admin (DA) account, return the status of all the AWS Organizations. If run from an account different than the DA, than return the status only for that account.
+  2. ``` -a designate_admin [-da ACCOUNTID] ```: Designate one account as DA on regions specified. 
      - `-da ACCOUNTID` :  indicate the account that should be set as DA. If `-da` is not used, then the script will search for a value in the parameters file, if empty, will check to see if a value has been exported for `INSPECTOR2_DA`.
   3. `-a activate -t ACCOUNTID|members [-s all]`: Activate a scan type in regions. The other options are the following:
      - A target account(s) is mandatory: `-t members | ACCOUNTID`. Either specified an ACCOUNTID `-t ACCOUNTID` on which scan type will be enabled, or use `-t members` to select all the accounts from AWS Organizations except the DA account on which to enable the scan type. 
@@ -102,9 +111,25 @@ Use `-h`or `--help` to see the commands options.
 `--dry-run` | `-r` option is available for each command. 
 
 ### 3.3. Example of script usage
-`./inspector2_enablement_with_awscli.sh -a delegate_admin -da ACCOUNTD_ID --dry-run`
+- (Dry run) Delegate `ACCOUNT_ID` as administrator for Amazon Inspector2:
+```
+./inspector2_enablement_with_awscli.sh -a delegate_admin -da ACCOUNTD_ID --dry-run
+```
 
- `./inspector2_enablement_with_awscli.sh -a activate -t ACCOUNT_ID -s all `
+- (Dry run) Check the Inspector2 activation status per account/per region:
+```
+./inspector2_enablement_with_awscli.sh -a get_status -r
+```
+
+- (Dry run) Associate `all members` accounts to Amazon Inspector2 Delegated administrator :
+```
+./inspector2_enablement_with_awscli.sh -a associate -t members --dry-run
+```
+
+- (Dry run) Activate Amazon Inspector2 for EC2 and ECR scans on all accounts : 
+```
+./inspector2_enablement_with_awscli.sh -a activate -t members -s all -r
+```
 
 
 ## 4. Activation phase
@@ -119,7 +144,7 @@ Caution: **Wait around 3 minutes** after step 3 for the association to be comple
 | ------ | ----------------- | ---------- | ----------- |
 | 1      | Management Organization account | `-a delegate_admin -da DA_ACCOUNT_ID` | designate `DA_ACCOUNT_ID` as Inspector2 DA for AWS Organizations |
 | 2      | Delegated Administrator Account | `-a activate -t DA_ACCOUNT_ID -s all` | Activate Inspector2 on the DA account for selected scans: ec2 or ecr or `all` = ec2 & ecr |
-| 3      | Delegated Administrator Account | `-a associate -t members` | Associate the member accounts to the DA account |
+| 3      | Delegated Administrator Account | ``` -a associate -t members ``` | Associate the member accounts to the DA account |
 | 4      | Delegated Administrator Account | `-a activate -t members -s all` | Enable Inspector2 on the member accounts for selected scans |
 | 5      | Delegated Administrator Account | `-a auto_enable -e "ec2=true, ecr=true"` | Configure auto-enablement of Inspector2 on accounts newly associated with the DA |
 
