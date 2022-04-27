@@ -35,6 +35,12 @@ default_rsstype="EC2 ECR"
 #Global variable 
 rsstype=""
 
+# Sleeping time between the API calls to avoid  ThrottlingException. A least 1s
+GOTOSLEEP=1.5
+
+# Maximum of account IDs you want to enable Amazon Inspector scans for. Max value 100
+ACCOUNTS_LIMIT=90
+
 # Global variable Dry-run
 dryrun="false"; 
 
@@ -258,7 +264,6 @@ check_inspector2_status_per_region () {
     ec2_status=""
     check_get_code="1"
     current_acc=$(aws sts get-caller-identity | jq -r '.Account')
-    org_list_account=$(aws organizations list-accounts | jq -r '.Accounts[].Id')
 
     if [ $(is_da_account) == "0" ] ##the current account is the Inspector2 DA account
     then 
@@ -278,6 +283,7 @@ check_inspector2_status_per_region () {
             then
                 echo "aws inspector2 batch-get-account-status --account-ids $i --region $region"
             else
+                echo "aws inspector2 batch-get-account-status --account-ids $i --region $region" 1>> $tmp_file_execution 2>> $tmp_file_execution
                 aws inspector2 batch-get-account-status --account-ids $i --region $region 1>> $tmp_file_execution 2>> $tmp_file_execution
                 check_get_code=$(echo $?)
                 if [ "$check_get_code" == "0" ];then
@@ -347,7 +353,9 @@ enable_inspector2_per_region() {
         else
             if [ $is_da == "0" ]; then
                 echo "Attemting to enable Inspector2 in accounts for the scanning type $scantype2activate in region $region;"
-                aws inspector2 enable --account-ids $target_to_activate --resource-types $scantype2activate --region $region 1>> $tmp_file_execution 2>> $tmp_file_execution; sleep 0.2
+                echo "Attemting to enable Inspector2 in accounts for the scanning type $scantype2activate in region $region;" 1>> $tmp_file_execution 2>> $tmp_file_execution
+                # Ensure that the accounts will be enable within the API call limit fixed ahead
+                echo $target_to_activate | xargs -n $ACCOUNTS_LIMIT echo "aws inspector2 enable --resource-types $scantype2activate --region $region --account-ids " | while read a ; do eval "$a" ; sleep $GOTOSLEEP ; done 1>> $tmp_file_execution 2>> $tmp_file_execution
             else
                 echo "Log in DA account to enable Amazon Inspector2 on $target_to_activate account(s)."
             fi
@@ -388,8 +396,9 @@ attach_member_to_inspector2_admin_per_region () {
                 echo "aws inspector2 associate-member --account-id $i --region $region"
             else
                 echo "Attempting to associate account $i to Inspector2 Administrator in region $region"
+                echo "Attempting to associate account $i to Inspector2 Administrator in region $region" 1>>$tmp_file_execution 2>>$tmp_file_execution
                 aws inspector2 associate-member --account-id $i --region $region 1>>$tmp_file_execution 2>>$tmp_file_execution
-                sleep 0.1
+                sleep 0.2
             fi
             check=""
         done
@@ -428,12 +437,13 @@ designated_delegated_admin_for_inspector2(){
                 if [ $current_acc == $master_account ]
                 then 
                     echo "Attempting to assign $local_del_admin as Inspector2 Administrator Account in region $region."
-                    aws inspector2 enable-delegated-admin-account --delegated-admin-account-id $local_del_admin --region $region 1>>$tmp_file_execution 2>>$tmp_file_execution                    
+                    echo "Attempting to assign $local_del_admin as Inspector2 Administrator Account in region $region." 1>>$tmp_file_execution 2>>$tmp_file_execution
+                    aws inspector2 enable-delegated-admin-account --delegated-admin-account-id $local_del_admin --region $region 1>>$tmp_file_execution 2>>$tmp_file_execution
                 else
                     echo "Please log as in the master account $master_account to successfully executed this command."
                 fi
             fi
-            sleep 0.1
+            sleep 0.2
         done
         echo "";echo "Use the console or Run \"aws inspector2 list-delegated-admin-accounts\" to check the result."
     else        
@@ -469,13 +479,14 @@ autoenable_inspector2_for_new_accounts() {
             if [ "$(is_da_account $region)" == "0" ]
             then 
                 echo "Attempting to configure auto-enablement of Inspector2 in new accounts in region : $region"
+                echo "Attempting to configure auto-enablement of Inspector2 in new accounts in region : $region" 1>>$tmp_file_execution 2>>$tmp_file_execution
                 aws inspector2 update-organization-configuration --auto-enable $auto_enable_conf --region $region 1>>$tmp_file_execution 2>>$tmp_file_execution
             else
                 echo "Log into Delegated Admin account to proceed with Inspector2 auto-enablement.";echo "";echo ""
                 exit
             fi
         fi
-        sleep 0.2    
+        sleep 0.3
     done
 }
 
@@ -511,7 +522,9 @@ disable_inspector2_per_region() {
         else 
             if [ "$(is_da_account)" == "0" ]; then
                 echo "Attemtping to disable Amazon Inspector2 in accounts [ACCOUNTS_LIST] for scanning type $scantype2deactivate  in region $region."
-                aws inspector2 disable --account-ids $target_to_deactivate --resource-types $scantype2deactivate --region $region  1>> $tmp_file_execution 2>> $tmp_file_execution; sleep 0.2 
+                echo "Attemtping to disable Amazon Inspector2 in accounts [ACCOUNTS_LIST] for scanning type $scantype2deactivate  in region $region." 1>> $tmp_file_execution 2>> $tmp_file_execution
+                # Ensure that the accounts will be enable within the API call limit fixed ahead
+                echo $target_to_deactivate | xargs -n $ACCOUNTS_LIMIT echo "aws inspector2 disable --resource-types $scantype2deactivate --region $region --account-ids " | while read a ; do eval "$a" ; sleep $GOTOSLEEP ; done 1>> $tmp_file_execution 2>> $tmp_file_execution
             else
                 echo "Log in DA account to disable Amazon Inspector2 on $target_to_activate account(s)."
             fi
@@ -529,7 +542,6 @@ detach_members_to_designated_admin_inspector2 (){
     memberstatus=""
     membership_status=""
     current_acc=""
-
     target=""
     argument_target=$1
    
@@ -554,7 +566,8 @@ detach_members_to_designated_admin_inspector2 (){
                 echo "aws inspector2 disassociate-member --account-id $i --region $region"
             else    
                 echo "Attempting to disassociate this account $i from DA in : $region."
-                aws inspector2 disassociate-member --account-id $i --region $region 1>> $tmp_file_execution 2>> $tmp_file_execution;sleep 0.1
+                echo "Attempting to disassociate this account $i from DA in : $region." 1>> $tmp_file_execution 2>> $tmp_file_execution
+                aws inspector2 disassociate-member --account-id $i --region $region 1>> $tmp_file_execution 2>> $tmp_file_execution;sleep 0.3
             fi              
         done
     done
@@ -596,6 +609,7 @@ remove_delegated_admin_for_inspector2(){
                 if [ $current_acc == $master_account ]
                 then 
                     echo "Attempting to remove $local_del_admin as delegated administrator in region $region "
+                    echo "Attempting to remove $local_del_admin as delegated administrator in region $region " 1>>$tmp_file_execution 2>>$tmp_file_execution 
                     aws inspector2 disable-delegated-admin-account --delegated-admin-account-id $local_del_admin --region $region 1>>$tmp_file_execution 2>>$tmp_file_execution
                 else
                     echo "Please log as in the master account $master_account to successfully executed this command in region : $region."
@@ -604,6 +618,7 @@ remove_delegated_admin_for_inspector2(){
             sleep 0.1
         done
         echo "";echo "CAUTION: If you are sure you want to remove the DA at the organization level for all regions run \"aws organizations deregister-delegated-administrator --service-principal inspector2.amazonaws.com --account-id $local_del_admin\"."
+        echo "      - You can also check which account is set as DA - run \"aws organizations list-delegated-administrators --service-principal inspector2.amazonaws.com\".";echo ""
     else        
        echo "--------- CAUTION ---------"; echo "You provided an accountid $local_del_admin that does not meet the requirements. Please see the execution file."
         echo "export INSPECTOR2_DA=\"DA_ACCOUNTID\" or set the right account id in $0 -a $actionselected -da accountid";
