@@ -4,15 +4,15 @@
         "description":"Delegated Administrator Account ID for Amazon Inspector2.."
         },
     "scanning_type":{
-        "selected":"EC2 ECR",
+        "selected":"EC2 ECR LAMBDA",
         "description": "Indicates the type of scan to be enabled by Inspector2"
         },
     "auto_enable":{
-        "conf":"ec2=true,ecr=true",
+        "conf":"ec2=true,ecr=true,lambda=true",
         "description" : "the scanning type to be enabled on every account newly attached to the Delegated Administrator"
         },
     "regions": {
-       "enablement": "eu-west-1 eu-west-3 us-east-1 us-east-2",
+       "enablement": "eu-west-1 eu-west-2 eu-west-3 eu-central-1 us-east-1 us-east-2",
        "description": "List of AWS regions - space separated - where the script will execute Amazon Inspector2 commands"
     }
   }

@@ -1,7 +1,7 @@
 ## 0. Important
-### 0.0.[UPDATE REQUIRED] Amazon Inspector2 now scans Lambda
+### 0.0.[NEW] Amazon Inspector2 now scans Lambda
 On Nov 28th 2022, [AWS announces Amazon Inspector support for AWS Lambda functions](https://aws.amazon.com/about-aws/whats-new/2022/11/aws-amazon-inspector-support-aws-lambda-functions/). 
-Stay tune for the upcoming updates on this page to cover Lambda activation at scale.
+This repository has been updated to cover **Lambda** scanning activation at scale: multi-accounts and multi-regions.
 
 ### 0.1. Amazon Inspector2 prerequites
 For Amazon Inspector2 to run CVE assessment, SSM Agent needs to be installed and [enabled](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-setting-up.html) on the EC2 as per the [documentation](https://docs.aws.amazon.com/inspector/latest/user/getting_started_tutorial.html). By **SSM Agent enabled**, ensure that AWS System Manager is deployed and can communicate with your EC2 having the adequate instance profile. 
@@ -59,18 +59,18 @@ Attach the [AmazonInspector2FullAccess](https://docs.aws.amazon.com/inspector/la
 ### 2.4. Variables
 #### 2.4.1 Default variables
 Below are the default variables in the script :
-- `$default_auto_enable_conf`       : Configure the scanning type to be enable for new accounts that are associated to the DA. You must always set the value for both ec2 and ecr. By default in the script, the value is set : `auto_enable_conf="ec2=true,ecr=true"`
-- `$default_rsstype`                : Inspector2 scanning type to be enable. The default value is set to `"EC2 ECR"`.
+- `$default_auto_enable_conf`       : Configure the scanning type to enable for new accounts that are associated to the DA. You must always set the value for all scanning types. By default in the script, the value is set : `auto_enable_conf="ec2=true,ecr=true,lambda=true"`
+- `$default_rsstype`                : Inspector2 scanning type to enable. The default value is set to `"EC2 ECR LAMBDA"`.
 
 #### 2.4.2 Variables to set in the parameters file 
 Below are the variables in the `param_inspector2.json` that you will need to update according to your Organization:
 - `inspector2_da.id`       : AWS Account id you want to designate as Delegated Admin for Amazon Inspector2
-- `scanning_type.selected` : Inspector2 scanning type to be enable. Possible values are "ECR" | "EC2" | "EC2 ECR" (use upper case)
-- `auto_enable.conf`       : Configure the scanning type to be enable for new accounts that are associated to the DA. You must always set the value for both ec2 and ecr, at an least with one of them being true. Example : `auto_enable.conf="ec2=true,ecr=false"`
+- `scanning_type.selected` : Inspector2 scanning type to enable. Possible values are "ECR" | "EC2" | "LAMBDA" (use upper case)
+- `auto_enable.conf`       : Configure the scanning type to enable for new accounts that are associated to the DA. You must always set the value for both ec2 and ecr, at an least with one of them being true. Example : `auto_enable.conf="ec2=true,ecr=false"`
 - `regions.enablement`     : The list of AWS regions where you want to enable/disable Amazon Inspector2. Example in the parameters file. If not specified in the file nor found as exported variable, then the script will use the current region.
 
 #### 2.4.3 Export the variables
-If you do not want to update the values in the `param_inspector2.json`, you can export the variables values:
+If you do not want to update the values in the `param_inspector2.json`, you can export the values that match your environment:
 - `export INSPECTOR2_DA="DA_ACCOUNTID"`
 - `export INSPECTOR2_REGIONS="eu-west-1 us-east-1 eu-central-1"`
 At the end of the script execution, unset the variables exported by doing:
@@ -79,12 +79,12 @@ At the end of the script execution, unset the variables exported by doing:
 
 
 ## 3. Usage
-The script runs locally using AWS CLI and works also on CloudShell. Maybe the easiest way to run it, by uploading the scriptsfor the customer. 
+The script runs locally using AWS CLI and works also on CloudShell. 
 If you have designated an account different than the Management Organization Account as "Delegated Administrator" for Amazon Inspector2, you will need to :
 1. run the script in the Management Organization Account : As per the security principle, only this account can designate another account as admin
 2. run the script (the same one) in the Delegated Administrator account to manage Amazon Inspector2 : enable/disable, configure auto-enable, associate/disassociate members...
 
-If you have designated the Management Organization account as the Delegated Admininistrator for Amazon Inspector2, then run all the steps of the script in only that account.
+If you have designated the Management Organization account as the Delegated Admininistrator for Amazon Inspector2, then run all the steps solely in that account.
 
 ### 3.1. script parameters
 1. If you run the script with no parameters you will see the list of options.
@@ -97,14 +97,14 @@ Use `-h`or `--help` to see the commands options.
   1. ```-a get_status ``` : Check the enablement status of Amazon Inspector per regions and per scan type. When run from the delegated admin (DA) account, return the status of all the AWS Organizations. If run from an account different than the DA, than return the status only for that account.
   2. ``` -a designate_admin [-da ACCOUNTID] ```: Designate one account as DA on regions specified. 
      - `-da ACCOUNTID` :  indicate the account that should be set as DA. If `-da` is not used, then the script will search for a value in the parameters file, if empty, will check to see if a value has been exported for `INSPECTOR2_DA`.
-  3. `-a activate -t ACCOUNTID|members [-s all]`: Activate a scan type in regions. The other options are the following:
+  3. `-a activate -t ACCOUNTID|members [-s all]`: Activate scan type in regions. The other options are the following:
      - A target account(s) is mandatory: `-t members | ACCOUNTID`. Either specified an ACCOUNTID `-t ACCOUNTID` on which scan type will be enabled, or use `-t members` to select all the accounts from AWS Organizations except the DA account on which to enable the scan type. 
-     - The scan type is specified `-s ec2|ecr|all`. This is optional, when not specified, then both scans type EC2&ECR will be enabled
-     - Example : ```./inspector2_enablement_with_awscli.sh -a activate -t members [-s ecr] ```
+     - The scan type is specified `-s ec2|ecr|lambda|all`. This is optional, when not specified, then all scans type will be enabled
+     - Example : ```./inspector2_enablement_with_awscli.sh -a activate -t members [-s lambda] ```
  4. `-a associate -t ACCOUNTID|members`: associate the specified target account(s) to the DA account
     
- 5. `-a auto_enable [-e "ec2=true, ecr=true"]`: configure the automatic activation of Amazon Inspector2 to accounts newly associated to the DA based on the configuration set. 
-  - `-e "ec2=true, ecr=false"` : specified the scan type to enable on each newly associated account. This is optional, when not used, the script will read the value in the parameter file. If nothing is set in the parameters file, then the script will applied the default value of `$default_auto_enable_conf`
+ 5. `-a auto_enable [-e "ec2=true,ecr=true,lambda=true"]`: configure the automatic activation of Amazon Inspector2 to accounts newly associated to the DA based on the configuration set. 
+  - `-e "ec2=true,ecr=false,lambda=true"` : specified the scan type to enable on each newly associated account. This is optional, when not used, the script will read the value in the parameter file. If nothing is set in the parameters file, then the script will applied the default value of `$default_auto_enable_conf`
   
  6. `-a deactivate -t ACCOUNTID|members [-s all]`: deactivate a specified scan for Amazon Inspector2. In order to deactive Amazon Inspector2, all the scan types should be disabled. 
  7. `-a disassociate -t ACCOUNTID|members`: Disassociate a target from the DA. 
@@ -136,7 +136,7 @@ Below, examples of script usage with Dry run:
 ./inspector2_enablement_with_awscli.sh -a associate -t members --dry-run
 ```
 
-#### 3.2.4. (Dry run) Activate Amazon Inspector2 for EC2 and ECR scans on all accounts : 
+#### 3.2.4. (Dry run) Activate Amazon Inspector2 with all scans on all member accounts : 
 ```
 ./inspector2_enablement_with_awscli.sh -a activate -t members -s all -r
 ```
@@ -157,10 +157,10 @@ Caution: **Wait around 3 minutes** after step 3 for the association to be comple
 | N°     | Run the script in | Parameters | Description | 
 | ------ | ----------------- | ---------- | ----------- |
 | 1      | Management Organization account | `-a delegate_admin -da DA_ACCOUNT_ID` | designate `DA_ACCOUNT_ID` as Inspector2 DA for AWS Organizations |
-| 2      | Delegated Administrator Account | `-a activate -t DA_ACCOUNT_ID -s all` | Activate Inspector2 on the DA account for selected scans: ec2 or ecr or `all` = ec2 & ecr |
+| 2      | Delegated Administrator Account | `-a activate -t DA_ACCOUNT_ID -s all` | Activate Inspector2 on the DA account for selected scans: ec2 or ecr or or lambda `all` = ec2 & ecr & lambda|
 | 3      | Delegated Administrator Account | ``` -a associate -t members ``` | Associate the member accounts to the DA account |
 | 4      | Delegated Administrator Account | `-a activate -t members -s all` | Enable Inspector2 on the member accounts for selected scans |
-| 5      | Delegated Administrator Account | `-a auto_enable -e "ec2=true, ecr=true"` | Configure auto-enablement of Inspector2 on accounts newly associated with the DA |
+| 5      | Delegated Administrator Account | `-a auto_enable -e "ec2=true, ecr=true,lambda=true"` | Configure auto-enablement of Inspector2 on accounts newly associated with the DA |
 
 Wait a few minutes for the Amazon Inspector2 to be enable in all the accounts and regions configured.
 

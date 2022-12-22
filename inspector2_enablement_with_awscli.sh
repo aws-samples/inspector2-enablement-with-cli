@@ -26,12 +26,13 @@ regions_to_activate=""
 del_admin_inspector=""
 
 # Configure the scanning type to be enable for new accounts that joined the org
-default_auto_enable_conf="ec2=true,ecr=true" 
+default_auto_enable_conf="ec2=true,ecr=true,lambda=true" 
 #Global variable
 auto_enable_conf=""
 
 # The scanning type to be enable/disable. Possible values are "ECR" | "EC2" | "EC2 ECR"
-default_rsstype="EC2 ECR"
+default_rsstype="EC2 ECR LAMBDA"
+scantype_values="ec2 | ecr | lambda | all"
 #Global variable 
 rsstype=""
 
@@ -57,8 +58,8 @@ tmp_file_execution="$tmp_dir/inspector.txt"
 
 check_aws_cli_version () {
     current_version=$(aws --version |  cut -d "/" -f 2 | cut -d " " -f 1)
-    support_inspector2_cli1="1.22.16"; #https://github.com/aws/aws-cli/blob/develop/CHANGELOG.rst#12216
-    support_inspector2_cli2="2.4.3";  #https://github.com/aws/aws-cli/blob/v2/CHANGELOG.rst#243
+    support_inspector2_cli1="1.27.18"; #https://github.com/aws/aws-cli/blob/develop/CHANGELOG.rst#12718
+    support_inspector2_cli2="2.9.2";  #https://github.com/aws/aws-cli/blob/v2/CHANGELOG.rst#292
     current_awscli=$(aws --version |  cut -d "/" -f 2 | cut -c 1)
     awscliv2=false
     awscliv1=false
@@ -197,7 +198,8 @@ get_scanning_type (){
                 "default" | "") rsstype=$default_rsstype; echo $default_rsstype;;
                 "ec2" | "EC2")  rsstype="EC2"; echo "EC2";;
                 "ecr" | "ECR")  rsstype="ECR"; echo "ECR";;
-                "all" | "ALL")  rsstype="EC2 ECR"; echo "EC2 ECR";;
+                "lambda" | "LAMBDA")  rsstype="LAMBDA"; echo "LAMBDA";;
+                "all" | "ALL")  rsstype=$default_rsstype; echo $default_rsstype;;
                 *) echo "1" ;;
             esac
     fi 
@@ -221,10 +223,10 @@ get_guide () {
     echo "To manage Amazon Inspector2, use one of the following argument. [ ] is optional."
     echo "Check Status       :  -a get_status"
     echo "Activation phase   :  -a delegate_admin -da ACCOUNT_ID"
-    echo "Activation phase   :  -a activate -t members|ACCOUNT_ID [-s ec2|ecr|all]"
+    echo "Activation phase   :  -a activate -t members|ACCOUNT_ID [-s $scantype_values]"
     echo "Activation phase   :  -a associate -t members|ACCOUNT_ID "
-    echo "Activation phase   :  -a auto_enable [-e \"ec2=true,ecr=true\"]"
-    echo "Deactivation phase :  -a deactivate -t members|ACCOUNT_ID [-s ec2|ecr|all]"
+    echo "Activation phase   :  -a auto_enable [-e \"$default_auto_enable_conf\"]"
+    echo "Deactivation phase :  -a deactivate -t members|ACCOUNT_ID [-s $scantype_values]"
     echo "Deactivation phase :  -a disassociate -t members|ACCOUNT_ID "
     echo "Deactivation phase :  -a remove_admin -da ACCOUNT_ID"
     echo ""
@@ -262,6 +264,8 @@ check_inspector2_status_per_region () {
     target_to_status=""
     ecr_status=""
     ec2_status=""
+    lambda_status=""
+    account_status=""
     check_get_code="1"
     current_acc=$(aws sts get-caller-identity | jq -r '.Account')
 
@@ -273,7 +277,8 @@ check_inspector2_status_per_region () {
     else
         target_to_status=$(aws sts get-caller-identity | jq -r '.Account')  #a member will only be able to see its own status
     fi
-
+    
+    # Because there is a loop on each account, this code is not subject to throttling API issue: only ONE account is process at the tie
     for i in $target_to_status;  do  
         inspector2_account_status=""
         echo"";echo " ******** Checking the activation status of Amazon Inspector2 for account $i per regions ******** "
@@ -293,24 +298,28 @@ check_inspector2_status_per_region () {
                         if [ "$inspector2_account_status_failed" == "ACCESS_DENIED" ]; then 
                             echo "For Account $i in $region: Amazon Inspector2 status is DISASSOCIATED."
                         else
-                            ecr_status=$(aws inspector2 batch-get-account-status --account-ids  $i  --region $region | jq -r '.accounts[].resourceState.ecr.status')  
-                            ec2_status=$(aws inspector2 batch-get-account-status --account-ids  $i  --region $region | jq -r '.accounts[].resourceState.ec2.status') 
-                            echo "For Account $i in $region: Amazon Inspector2 status is $inspector2_account_status - ECR is $ecr_status - EC2 is $ec2_status";
+                            account_status=$(aws inspector2 batch-get-account-status --account-ids  $i  --region $region)
+                            ecr_status=$(echo $account_status | jq -r '.accounts[].resourceState.ecr.status')
+                            ec2_status=$(echo $account_status | jq -r '.accounts[].resourceState.ec2.status') 
+                            lambda_status=$(echo $account_status | jq -r '.accounts[].resourceState.lambda.status')
+                            echo "For Account $i in $region: Amazon Inspector2 status is $inspector2_account_status - ECR is $ecr_status - EC2 is $ec2_status - LAMBDA is $lambda_status";
                         fi
                         inspector2_account_status_failed=""
                     elif  [ "$inspector2_account_status" == "DISABLED" ]; then 
-                        ecr_status="DISABLED";ec2_status="DISABLED"
-                        echo "For Account $i in $region: Amazon Inspector2 status is $inspector2_account_status - ECR is $ecr_status - EC2 is $ec2_status"
+                        ecr_status="DISABLED";ec2_status="DISABLED";lambda_status="DISABLED"  # the purpose here is to avoid a useless API call by displaying Disabled status
+                        echo "For Account $i in $region: Amazon Inspector2 status is $inspector2_account_status - ECR is $ecr_status - EC2 is $ec2_status - LAMBDA is $lambda_status"
                     else
-                        ecr_status=$(aws inspector2 batch-get-account-status --account-ids  $i  --region $region | jq -r '.accounts[].resourceState.ecr.status')  
-                        ec2_status=$(aws inspector2 batch-get-account-status --account-ids  $i  --region $region | jq -r '.accounts[].resourceState.ec2.status')  
-                        echo "For Account $i in $region: Amazon Inspector2 status is $inspector2_account_status - ECR is $ecr_status - EC2 is $ec2_status"
+                        account_status=$(aws inspector2 batch-get-account-status --account-ids  $i  --region $region)
+                        ecr_status=$(echo $account_status | jq -r '.accounts[].resourceState.ecr.status')
+                        ec2_status=$(echo $account_status | jq -r '.accounts[].resourceState.ec2.status') 
+                        lambda_status=$(echo $account_status | jq -r '.accounts[].resourceState.lambda.status')
+                        echo "For Account $i in $region: Amazon Inspector2 status is $inspector2_account_status - ECR is $ecr_status - EC2 is $ec2_status - LAMBDA is $lambda_status";
                     fi
                 else
                     echo "For Account $i in $region: Amazon Inspector2 status is unknown. Check the execution file."
                 fi
                 inspector2_account_status=""
-                ecr_status=""
+                ecr_status="";account_status="";lambda_status=""
                 ec2_status=""
             fi
             sleep 0.1;
@@ -339,7 +348,7 @@ enable_inspector2_per_region() {
    #########--------->Scan to activate
     scantype2activate=$(get_scanning_type $scan2activate)
     if [ "$scantype2activate" == "1" ]; then
-        echo "Unexpected argument passed : $scantype2activate. Possible values are : ec2 | ecr | all. "
+        echo "Unexpected argument passed : $scantype2activate. Possible values are : $scantype_values. "
         exit 1
     fi
 
@@ -370,8 +379,6 @@ attach_member_to_inspector2_admin_per_region () {
     argument_target=$1
     check=""
     deleg_admin_found=""
-    target=""
-    argument_target=$1
     current_acc=""
     #Exit if the current account is not the DA, since the association must be done by the DA account
     if [ "$(is_da_account)" != "0" ]; then 
@@ -461,10 +468,14 @@ autoenable_inspector2_for_new_accounts() {
         #Set value in global variable $regions_to_activate to be used all over the script for all the actions
         get_auto_enable_conf
     else
-        echo "$1" | grep "ec2" | grep "ecr" | grep "true"  1>>$tmp_file_execution 2>>$tmp_file_execution
+        # the command below check if there all the required scan types are configured, and at least one is true
+        echo "$1" | grep "ec2" | grep "ecr" | grep "lambda" | grep "true"  1>>$tmp_file_execution 2>>$tmp_file_execution
         check_result=$(echo "$?")
         if [ "$check_result" == "0" ]; then
             auto_enable_conf="$1"
+        else
+            # No scan type was enabled, or something unexpected happened, so the default auto-conf will be applied
+            auto_enable_conf=$default_auto_enable_conf
         fi
     fi
     
@@ -510,7 +521,7 @@ disable_inspector2_per_region() {
    #########--------->
     scantype2deactivate=$(get_scanning_type $scan2deactivate)
     if [ "$scantype2deactivate" == "1" ]; then
-        echo "Unexpected argument passed : $scantype2deactivate. Possible values are : ec2 | ecr | all. "; exit 1
+        echo "Unexpected argument passed : $scantype2deactivate. Possible values are : $scantype_values. "; exit 1
     fi
 
     echo"";echo " ******** Deactivation of Amazon Inspector2 for accounts listed below per regions ******** "
@@ -528,10 +539,8 @@ disable_inspector2_per_region() {
             else
                 echo "Log in DA account to disable Amazon Inspector2 on $target_to_activate account(s)."
             fi
-        fi               
+        fi
     done
-
- 
  } 
 
 
@@ -550,7 +559,7 @@ detach_members_to_designated_admin_inspector2 (){
         echo "Can only be done from the delegated admin (DA) account! Please log in your DA account."
         exit 1
     fi
-   
+
     #########--------->Target to apply the action on
     target=$(get_target $argument_target)
     current_acc=$(aws sts get-caller-identity | jq -r '.Account')
