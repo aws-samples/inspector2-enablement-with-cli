@@ -19,19 +19,7 @@ Below the prerequites in order to successfully run the script to deploy Amazon I
 Using this script, it is assumed you have met the prerequites in the Amazon Inspector2 [official documentation](https://docs.aws.amazon.com/inspector/latest/user/getting_started_tutorial.html). 
 
 ### 2.1. AWS CLI 
-Note: You can use [AWS CloudShell](https://docs.aws.amazon.com/cloudshell/latest/userguide/getting-started.html).
-
-#### 2.1.1.  AWS CLI version
-The below versions at the minimum expected to use Amazon Inspector2 CLI reference:
-- For AWS CLI 1, install at least version [1.22.16](https://github.com/aws/aws-cli/blob/develop/CHANGELOG.rst#12216)
-- For AWS CLI 2, install at least version [2.4.3](https://github.com/aws/aws-cli/blob/v2/CHANGELOG.rst#243)
-
-Note : The script works with CLI version 1 and CLI version 2. The script checks AWS CLI version when running.
-
-#### 2.1.2.  jq
-`jq` is used in the script, so please install [jq](https://stedolan.github.io/jq/download/). 
-
-#### 2.1.3.  [OPTIONAL] Using AWS CloudShell
+#### 2.1.1.  [RECOMMENDED] Using AWS CloudShell
 Launch AWS CloudShell as outlined in [this page](https://docs.aws.amazon.com/cloudshell/latest/userguide/getting-started.html).
 
 Download the code by executing on CloudShell:
@@ -39,6 +27,21 @@ Download the code by executing on CloudShell:
 ```
 git clone https://github.com/aws-samples/inspector2-enablement-with-cli.git
 ```
+
+#### 2.1.2.  AWS CLI version
+The below versions at the minimum expected to use Amazon Inspector2 CLI reference:
+- For AWS CLI 1, install at least version [1.22.16](https://github.com/aws/aws-cli/blob/develop/CHANGELOG.rst#12216)
+- For AWS CLI 2, install at least version [2.4.3](https://github.com/aws/aws-cli/blob/v2/CHANGELOG.rst#243)
+
+Note : The script works with CLI version 1 and CLI version 2. The script checks AWS CLI version when running.
+
+#### 2.1.3.  jq
+`jq` is used in the script, so please install [jq](https://stedolan.github.io/jq/download/). 
+
+#### 2.1.4 bash / zsh version
+The script has been tested with :
+- bash version :  ```version 5.2.15(1)-release```
+- zsh version  : ```zsh 5.8.1 (x86_64-apple-darwin21.0)```.
 
 ### 2.2. AWS Organizations
 AWS Organizations is mandatory. The delegation of Amazon Inspector2 Delegated Administrator (DA) can only be done from the managment account.
