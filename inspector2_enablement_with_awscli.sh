@@ -146,7 +146,7 @@ get_regions_list
 # Check if the current user is in the delegated admin or not
 is_da_account(){
     check_result=""
-    aws inspector2 get-delegated-admin-account 2>&1 |& grep -qs 'Invoking account is the delegated admin.'
+    aws inspector2 get-delegated-admin-account 2>&1 | grep -qs 'Invoking account is the delegated admin.'
     check_result=$(echo "$?")
     if [ "$check_result" == "0" ]; then 
         echo "$check_result" # this account is the DA: good
