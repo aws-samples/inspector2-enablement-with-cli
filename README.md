@@ -3,11 +3,11 @@
 On Nov 28th 2022, [AWS announces Amazon Inspector support for AWS Lambda functions](https://aws.amazon.com/about-aws/whats-new/2022/11/aws-amazon-inspector-support-aws-lambda-functions/). 
 This repository has been updated to cover **Lambda** scanning activation at scale: multi-accounts and multi-regions.
 
-### 0.1. Amazon Inspector2 prerequites
+### 0.1. Amazon Inspector2 prerequisites
 For Amazon Inspector2 to run CVE assessment, SSM Agent needs to be installed and [enabled](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-setting-up.html) on the EC2 as per the [documentation](https://docs.aws.amazon.com/inspector/latest/user/getting_started_tutorial.html). By **SSM Agent enabled**, ensure that AWS System Manager is deployed and can communicate with your EC2 having the adequate instance profile. 
 
 ### 0.2. Note 
-- If you have questions regarding Amazon Inspector2, please reach out the product team by opening a ticket. 
+- If you have questions regarding Amazon Inspector2, please reach out to the product team by opening a ticket. 
 - If you have questions regarding the script, you can contact the script author.
 
 ## 1. Purpose
