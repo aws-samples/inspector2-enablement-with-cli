@@ -278,10 +278,10 @@ check_inspector2_status_per_region () {
         target_to_status=$(aws sts get-caller-identity | jq -r '.Account')  #a member will only be able to see its own status
     fi
     
-    # Because there is a loop on each account, this code is not subject to throttling API issue: only ONE account is process at the tie
+    # Because there is a loop on each account, this code is not subject to throttling API issue: only ONE account is processed at the time
     for i in $target_to_status;  do  
         inspector2_account_status=""
-        echo"";echo " ******** Checking the activation status of Amazon Inspector2 for account $i per regions ******** "
+        echo"";echo " ******** Checking the activation status of Amazon Inspector2 for account $i per region ******** "
 
         for region in $regions_to_activate; do
             if [ "$dryrun" == "true" ]
@@ -352,7 +352,7 @@ enable_inspector2_per_region() {
         exit 1
     fi
 
-    echo"";echo " ******** Activation of Inspector2 for accounts per regions ******** "
+    echo"";echo " ******** Activation of Inspector2 for accounts per region ******** "
     echo "[ACCOUNTS_LIST]:"$target_to_activate
     is_da="$(is_da_account)"
     for region in $regions_to_activate; do
@@ -396,7 +396,7 @@ attach_member_to_inspector2_admin_per_region () {
     fi
 
     for i in $target;  do  
-        echo"";echo " ******** Checking the member status of Amazon Inspector2 for account $i per regions ******** "
+        echo"";echo " ******** Checking the member status of Amazon Inspector2 for account $i per region ******** "
         for region in $regions_to_activate; do
             if [ "$dryrun" == "true" ]
             then
@@ -422,14 +422,14 @@ designated_delegated_admin_for_inspector2(){
     if [ "x$1" == "x" ];then #No argument given with -da option
         local_del_admin=$(get_delegated_admin)
     else
-        local_del_admin="$1" #use the argupment given with -da
+        local_del_admin="$1" #use the argument given with -da
     fi
     if [ "x$local_del_admin" == "x" ]; then
         check_accid="1"
     else 
         check_accid=$(check_account_id $local_del_admin)
     fi
-    echo"";echo " ******** Designate $local_del_admin account as  Amazon Inspector2 Administrator per regions ******** "
+    echo"";echo " ******** Designate $local_del_admin account as  Amazon Inspector2 Administrator per region ******** "
 
     check_accid=$(check_account_id $local_del_admin)
     if [ "$check_accid" == "0" ]; then
@@ -480,7 +480,7 @@ autoenable_inspector2_for_new_accounts() {
     fi
     
     
-    echo"";echo " ******** Auto-enablement of Inspector2 for new accounts per regions ******** "
+    echo"";echo " ******** Auto-enablement of Inspector2 for new accounts per region ******** "
 
     for region in $regions_to_activate; do
         if [ "$dryrun" == "true" ]
@@ -524,7 +524,7 @@ disable_inspector2_per_region() {
         echo "Unexpected argument passed : $scantype2deactivate. Possible values are : $scantype_values. "; exit 1
     fi
 
-    echo"";echo " ******** Deactivation of Amazon Inspector2 for accounts listed below per regions ******** "
+    echo"";echo " ******** Deactivation of Amazon Inspector2 for accounts listed below per region ******** "
     echo "[ACCOUNTS_LIST]: "$target_to_deactivate;echo""
 
     for region in $regions_to_activate; do
@@ -604,7 +604,7 @@ remove_delegated_admin_for_inspector2(){
     else 
         check_accid=$(check_account_id $local_del_admin)
     fi
-    echo "";echo " ******** Remove $local_del_admin account as Amazon Inspector2 Administrator per regions ******** "    
+    echo "";echo " ******** Remove $local_del_admin account as Amazon Inspector2 Administrator per region ******** "    
 
     if [ "$check_accid" == "0" ]; then
         master_account=$(aws organizations describe-organization --query Organization.MasterAccountId --output text)
