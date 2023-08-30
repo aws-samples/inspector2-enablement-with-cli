@@ -42,7 +42,7 @@ Note : The script works with CLI version 1 and CLI version 2. The script checks 
 
 #### 2.1.4 bash / zsh version
 The script has been tested with :
-- bash version :  ```version 5.2.15(1)-release```
+- bash version :  ```version 4.2.46(2)-release```
 - zsh version  : ```zsh 5.8.1 (x86_64-apple-darwin21.0)```.
 
 ### 2.2. AWS Organizations
