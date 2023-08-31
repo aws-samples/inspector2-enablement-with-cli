@@ -37,6 +37,9 @@ The below versions at the minimum expected to use Amazon Inspector2 CLI referenc
 
 Note : The script works with CLI version 1 and CLI version 2. The script checks AWS CLI version when running.
 
+##### WARNING: When using AWS CLI, you must set a default region in your `~/.aws/config`.
+
+
 #### 2.1.3.  jq
 `jq` is used in the script, so please install [jq](https://stedolan.github.io/jq/download/).
 
