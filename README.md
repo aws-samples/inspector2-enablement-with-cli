@@ -103,7 +103,7 @@ Use `-h`or `--help` to see the commands options.
 
 2. The list of actions that can be performed with the script require `-a` or `--action`. It is a mandatory option.
   1. ```-a get_status ``` : Check the enablement status of Amazon Inspector per regions and per scan type. When run from the delegated admin (DA) account, return the status of all the AWS Organizations. If run from an account different than the DA, than return the status only for that account.
-  2. ``` -a designate_admin [-da ACCOUNTID] ```: Designate one account as DA on regions specified.
+  2. ``` -a delegate_admin [-da ACCOUNTID] ```: Designate one account as DA on regions specified.
      - `-da ACCOUNTID` :  indicate the account that should be set as DA. If `-da` is not used, then the script will search for a value in the parameters file, if empty, will check to see if a value has been exported for `INSPECTOR2_DA`.
   3. `-a activate -t ACCOUNTID|members [-s all]`: Activate scan type in regions. The other options are the following:
      - A target account(s) is mandatory: `-t members | ACCOUNTID`. Either specified an ACCOUNTID `-t ACCOUNTID` on which scan type will be enabled, or use `-t members` to select all the accounts from AWS Organizations except the DA account on which to enable the scan type.
