@@ -37,11 +37,13 @@ The below versions at the minimum expected to use Amazon Inspector2 CLI referenc
 
 Note : The script works with CLI version 1 and CLI version 2. The script checks AWS CLI version when running.
 
-##### WARNING: When using AWS CLI, you must set a default region in your `~/.aws/config`.
+##### WARNING: If you are not using CloudShell but your computer terminal with AWS CLI installed, you must set a default region in your `~/.aws/config`.
 
 
 #### 2.1.3.  jq
-`jq` is used in the script, so please install [jq](https://stedolan.github.io/jq/download/).
+> `jq` will likely be already installed in CloudShell.
+
+`jq` is used in the script, so please checke if it is already installed (Run `jq --version`) or install [jq](https://stedolan.github.io/jq/download/).
 
 #### 2.1.4 bash / zsh version
 The script has been tested with :
@@ -53,9 +55,9 @@ AWS Organizations is mandatory. The delegation of Amazon Inspector2 Delegated Ad
 
 ### 2.3. Access and permissions
 #### 2.3.1. Access to the Organizations management account
-From the Organization management account, designate a Delegated Admininistrator for Amazon Inspector2.
+From the Organization management account, designate a Delegated Administrator for Amazon Inspector2.
 
-#### 2.3.2. Access the Delegated Admininistrator (DA)
+#### 2.3.2. Access the Delegated Administrator (DA)
 The effective management of Amazon Inspector2 will be done from the DA account. Unlike AWS Organizations, Amazon Inspector is a Regional service. This means that a delegated administrator must be designated in each Region and must add and enable scans for members in each AWS Region for which you would like to manage Amazon Inspector.
 
 #### 2.3.3. Permissions to designate a DA
@@ -88,11 +90,11 @@ At the end of the script execution, unset the variables exported by doing:
 
 ## 3. Usage
 The script runs locally using AWS CLI and works also on CloudShell.
-If you have designated an account different than the Management Organization Account as "Delegated Administrator" for Amazon Inspector2, you will need to :
-1. run the script in the Management Organization Account : As per the security principle, only this account can designate another account as admin
+If you have designated an account different than the organization management account as "Delegated Administrator" for Amazon Inspector2, you will need to :
+1. run the script in the organization management account : As per the security principle, only this account can designate another account as admin
 2. run the script (the same one) in the Delegated Administrator account to manage Amazon Inspector2 : enable/disable, configure auto-enable, associate/disassociate members...
 
-If you have designated the Management Organization account as the Delegated Admininistrator for Amazon Inspector2, then run all the steps solely in that account.
+If you have designated the organization management account as the Delegated Administrator for Amazon Inspector2, then run all the steps solely in that account.
 
 ### 3.1. script parameters
 1. If you run the script with no parameters you will see the list of options.
@@ -157,21 +159,21 @@ Ensure you have remove the dry-run option when you are running the commands of y
 Amazon Inspector2 would be enabled in all accounts, regions with the scan type you configured in the variales. 
 ![Activation phase using the script](images/Inspector2_activation.png)
 
-If your Delegated Admininistrator (DA) account is different than your management Organization account, then after step 1, log into your DA account. If not, continue the next steps in the same account.
+If your Delegated Administrator (DA) account is different than your organization management account, then after step 1, log into your DA account. If not, continue the next steps in the same account.
 You will need to execute the steps 2, 3, 4 and 5 in the DA account as shown in the table below.
 Caution: **Wait around 3 minutes** after step 3 for the association to be completed. You can check the progress through the console while the script is running.
 
 | N°     | Run the script in | Parameters | Description |
 | ------ | ----------------- | ---------- | ----------- |
-| 1      | Management Organization account | `-a delegate_admin -da DA_ACCOUNT_ID` | designate `DA_ACCOUNT_ID` as Inspector2 DA for AWS Organizations |
-| 2      | Delegated Administrator Account | `-a activate -t DA_ACCOUNT_ID -s all` | Activate Inspector2 on the DA account for selected scans: ec2 or ecr or or lambda `all` = ec2 & ecr & lambda & lambdaCode|
-| 3      | Delegated Administrator Account | ``` -a associate -t members ``` | Associate the member accounts to the DA account |
-| 4      | Delegated Administrator Account | `-a activate -t members -s all` | Enable Inspector2 on the member accounts for selected scans |
-| 5      | Delegated Administrator Account | `-a auto_enable -e "ec2=true,ecr=true,lambda=true,lambdaCode=true"` | Configure auto-enablement of Inspector2 on accounts newly associated with the DA |
+| 1      | Organization management account| `-a delegate_admin -da DA_ACCOUNT_ID` | designate `DA_ACCOUNT_ID` as Inspector2 DA for AWS Organizations |
+| 2      | Delegated Administrator account | `-a activate -t DA_ACCOUNT_ID -s all` | Activate Inspector2 on the DA account for selected scans: ec2 or ecr or or lambda `all` = ec2 & ecr & lambda & lambdaCode|
+| 3      | Delegated Administrator account | ``` -a associate -t members ``` | Associate the member accounts to the DA account |
+| 4      | Delegated Administrator account | `-a activate -t members -s all` | Enable Inspector2 on the member accounts for selected scans |
+| 5      | Delegated Administrator account | `-a auto_enable -e "ec2=true,ecr=true,lambda=true,lambdaCode=true"` | Configure auto-enablement of Inspector2 on accounts newly associated with the DA |
 
 Wait a few minutes for the Amazon Inspector2 to be enable in all the accounts and regions configured.
 
-In the DA Account, execute the script with `- a get_status` to get Amazon Inspector2 activation status for all accounts associated.
+In the DA account, execute the script with `- a get_status` to get Amazon Inspector2 activation status for all accounts associated.
 
 
 ## 5. Deactivation phase
@@ -181,16 +183,16 @@ For Amazon Inspector2 deactivation, you will need to follow the steps below.
 
 | N°     | Run the script in | Parameters | Description |
 | ------ | ------ | ------ | ------ |
-| 6   | Delegated Administrator Account | `-a deactivate -t members -s all` | Deactivate a type of scan ec2 or ecr. Or deactivate Inspector2 by removing  `all` = ec2 & ecr scans types from members accounts |
-| 7   | Delegated Administrator Account | `-a disassociate -t members` | Disassociate the memebers accounts from the DA account|
-| 8   | Delegated Administrator Account | `-a deactivate -t DA_ACCOUNT_ID -s all` | Deactivate Inspector2 on the DA account|
-| 9   | Management Organization account | `-a remove_admin -da DA_ACCOUNT_ID` | Remove DA account  |
+| 6   | Delegated Administrator account | `-a deactivate -t members -s all` | Deactivate a type of scan ec2 or ecr. Or deactivate Inspector2 by removing  `all` = ec2 & ecr scans types from members accounts |
+| 7   | Delegated Administrator account | `-a disassociate -t members` | Disassociate the memebers accounts from the DA account|
+| 8   | Delegated Administrator account | `-a deactivate -t DA_ACCOUNT_ID -s all` | Deactivate Inspector2 on the DA account|
+| 9   | Organization management  account | `-a remove_admin -da DA_ACCOUNT_ID` | Remove DA account  |
 
 Caution: **Wait around 3 minutes** after step 6 for the association to be completed. You can check the progress through the console while the script is running.
 
 Wait around 5 minutes after step 6 then check the status with `-a get_status`. Most accounts should now have "DISABLING" or "DISABLED" as status for the scan(s) you deactivated.
 Optionally, wait around 5 minutes after step 7 and then check the status with `-a get_status`. Most accounts should now have "DISASSOCIATED" as status.
-Connect into the Management Organization account for step 9.
+Connect into the organization management account for step 9.
 
 ## Security
 
