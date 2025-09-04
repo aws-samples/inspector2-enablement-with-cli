@@ -187,6 +187,7 @@ Ensure you have removed the dry-run option when you are running the commands of 
 
 ## 🚀 4. Activation phase
 Amazon Inspector2 would be enabled in the accounts and regions where the configured scan types are supported. 
+
 ![Activation phase using the script](images/Inspector2_activation.png)
 
 If your Delegated Administrator (DA) account is different than your organization management account, then after step 1, log into your DA account. If not, continue the next steps in the same account.
