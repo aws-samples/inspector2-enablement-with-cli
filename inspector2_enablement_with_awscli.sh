@@ -230,7 +230,7 @@ get_guide () {
     echo "Deactivation phase :  -a disassociate -t members|ACCOUNT_ID"
     echo "Deactivation phase :  -a remove_admin -da ACCOUNT_ID"
     echo ""
-    echo "Example of execution with dryrun    : $0 -a get_status --dryrun or $0 -a get_status -r" 
+    echo "Example of execution with dryrun    : $0 -a get_status --dry-run or $0 -a get_status -r" 
     echo "Example of execution without dryrun : $0 -a get_status"
     echo "Dry-run is available for each command."
 }
