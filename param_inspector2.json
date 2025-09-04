@@ -1,14 +1,14 @@
 {
     "inspector2_da": {
         "id":"", 
-        "description":"Delegated Administrator Account ID for Amazon Inspector2.."
+        "description":"Delegated Administrator Account ID for Amazon Inspector2."
         },
     "scanning_type":{
-        "selected":"EC2 ECR LAMBDA LAMBDA_CODE",
+        "selected":"EC2 ECR LAMBDA LAMBDA_CODE CODE_REPOSITORY",
         "description": "Indicates the type of scan to be enabled by Inspector2"
         },
     "auto_enable":{
-        "conf":"ec2=true,ecr=true,lambda=true,lambdaCode=true",
+        "conf":"ec2=true,ecr=true,lambda=true,lambdaCode=true,codeRepository=true",
         "description" : "the scanning type to be enabled on every account newly attached to the Delegated Administrator"
         },
     "regions": {
