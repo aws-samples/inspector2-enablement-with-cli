@@ -95,6 +95,7 @@ Below are the variables in the `param_inspector2.json` that you will need to upd
 If you do not want to update the values in the `param_inspector2.json`, you can export the values that match your environment:
 - `export INSPECTOR2_DA="DA_ACCOUNTID"`
 - `export INSPECTOR2_REGIONS="eu-west-1 us-east-1 eu-central-1"`
+
 🗑️ At the end of the script execution, unset the variables exported by doing:
 - `unset INSPECTOR2_DA`
 - `unset INSPECTOR2_REGIONS`.
@@ -102,26 +103,28 @@ If you do not want to update the values in the `param_inspector2.json`, you can 
 
 ## 🛠️ 3. Usage
 The script runs locally using AWS CLI and works also on CloudShell.
-If you have designated an account different than the organization management account as "Delegated Administrator" for Amazon Inspector2, you will need to :
+If you have designated an account different than the organization management account as "Delegated Administrator" for Amazon Inspector2, you will need to:
 
-0. change the script permission to make it executable
+0. change the script permission to **make it executable**
 ```
 chmod u+x ./inspector2_enablement_with_awscli.sh
 ```
 
-1. run the script in the organization management account : As per the security principle, only this account can designate another account as admin
-2. run the script (the same one) in the Delegated Administrator account to manage Amazon Inspector2 : enable/disable, configure auto-enable, associate/disassociate members...
+1. **run the script in the organization management account** : As per the security principle, only this account can designate another account as admin
 
-If you have designated the organization management account as the Delegated Administrator for Amazon Inspector2, then run all the steps solely in that account.
+2. run the script (the same script) in the **Delegated Administrator account** to manage Amazon Inspector2 : enable/disable, configure auto-enable, associate/disassociate members...
+
+**Note**: If you have **designated the organization management account as the Delegated Administrator** for Amazon Inspector2, then run all the steps solely in that account.
 
 ### 3.1. script parameters
-1. If you run the script with no parameters you will see the list of options.
+3.1.1. If you run the script with no parameters you will see the list of options.
 ```
 ./inspector2_enablement_with_awscli.sh
 ```
 Use `-h`or `--help` to see the commands options.
 
-2. The list of actions that can be performed with the script require `-a` or `--action`. It is a mandatory option.
+3.1.2. The list of actions that can be performed with the script require `-a` or `--action`. It is a mandatory option.
+
   1. ```-a get_status ``` : Check the enablement status of Amazon Inspector per regions and per scan type. When run from the delegated admin (DA) account, return the status of all the AWS Organizations. If run from an account different than the DA, then return the status only for that account.
   2. ``` -a delegate_admin [-da ACCOUNTID] ```: Designate one account as DA on regions specified.
      - `-da ACCOUNTID` :  indicate the account that should be set as DA. If `-da` is not used, then the script will search for a value in the parameters file, if empty, will check to see if a value has been exported for `INSPECTOR2_DA`.
@@ -137,7 +140,6 @@ Use `-h`or `--help` to see the commands options.
 
   6. `-a enable_deep_inspection -t ACCOUNTID|members`: Activate EC2 Deep Inspection scan. -
      - A target account(s) is mandatory: `-t members | ACCOUNTID`. Either specify an ACCOUNTID `-t ACCOUNTID` on which scan type will be enabled, or use `-t members` to select all the accounts from AWS Organizations except the DA account on which to enable the scan sub-feature.
-
 
   7. `-a disable_deep_inspection -t ACCOUNTID|members`: Deactivate EC2 Deep Inspection scan.
      - A target account(s) is mandatory: `-t members | ACCOUNTID`. Either specify an ACCOUNTID `-t ACCOUNTID` on which scan type will be enabled, or use `-t members` to select all the accounts from AWS Organizations except the DA account on which to enable the scan sub-feature.
