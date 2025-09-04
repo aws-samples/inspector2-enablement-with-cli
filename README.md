@@ -103,6 +103,7 @@ If you do not want to update the values in the `param_inspector2.json`, you can 
 ## 🛠️ 3. Usage
 The script runs locally using AWS CLI and works also on CloudShell.
 If you have designated an account different than the organization management account as "Delegated Administrator" for Amazon Inspector2, you will need to :
+
 0. change the script permission to make it executable
 ```
 chmod u+x ./inspector2_enablement_with_awscli.sh
