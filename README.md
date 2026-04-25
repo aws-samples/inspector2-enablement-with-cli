@@ -1,4 +1,21 @@
-### 🚀 New Features released!
+ ## 📢 What's New
+
+### ⚠️ November 2025 — AWS Organizations Inspector Policies
+
+  Amazon Inspector now supports [organization-wide management through AWS Organizations policies](https://aws.amazon.com/about-aws/whats-new/2025/11/amazon-inspector-organization-wide-management-aws-organizations-policies/). You can centrally 
+  enable scan types (EC2, ECR, Lambda Standard, Lambda Code, Code Security) across your organization using a
+  declarative policy attached to the organization root, OUs, or individual accounts.
+
+  This script remains relevant and complementary. Org policies handle scan type enablement, but do not cover:
+
+  - 🔍 **EC2 Deep Inspection** activation at scale (the key differentiator — see Section 7)
+  - 📊 **Cross-account/cross-region status reporting** (`-a get_status`)
+  - 🔧 **Delegated Administrator designation** (required before attaching Org policies)
+  - 🗑️ **Full deactivation and cleanup workflows**
+
+👉 See Section 7 for a detailed comparison and recommended combined deployment workflow.
+
+### 🚀 New features released!
 **📢Updates!** This repository is updated to support Amazon Inspector's latest capabilities : **EC2 Deep Inspection** and **Code repository** scanning.  With the new scan for Code repository released on June 17th, 2025, Amazon Inspector scans:
 
 - 🔍 **First-party application source code** - Scan your custom application code for vulnerabilities
@@ -241,6 +258,66 @@ The solution generates a detailed log file during execution to track progress an
 - **Wrong account**: Verify that you are running the solution in the right account
 - **Region not supported**: Check scan type availability per region
 - **Association delays**: Wait 3-5 minutes between association steps.
+
+ ## ⚠️ 7. Relationship with AWS Organizations Inspector Policies
+
+As of November 19, 2025, Amazon Inspector supports organization-wide management through AWS Organizations policies. This section explains how this script relates to that capability and why it remains relevant.
+
+
+### 7.1. What are AWS Organizations Inspector Policies?
+AWS Organizations Inspector policies allow you to centrally enable Amazon Inspector scan types across your organization using a declarative policy. You can:
+  - Attach a policy to the organization root, specific OUs, or individual accounts
+  - Specify which scan types to enable: EC2, ECR, Lambda Standard, Lambda Code, Code Security
+  - Control which regions to enable/disable, including `ALL_SUPPORTED` for automatic coverage of new regions
+  - Leverage policy inheritance — new accounts joining the organization or OU automatically inherit the policy
+  - Use child policies to override parent settings at different organizational levels
+
+
+ 📖 Documentation: [Amazon Inspector policies - AWS Organizations](https://docs.aws.amazon.com/organizations/latest/userguide/services-that-can-integrate-inspector.html)
+
+### 7.2. Is this script still relevant?
+
+  **Yes.** AWS Organizations Inspector policies and this script are **complementary**. Org policies simplify the
+  initial enablement of scan types, but this script continues to provide capabilities that Org policies do not  cover.
+
+### 7.3. When to use Org Policies vs. this Script
+
+  | Use Case | Recommended Approach |
+  |---|---|
+  | Enable scan types (EC2, ECR, Lambda, etc.) across the organization | ✅ **AWS Organizations Inspector
+  Policies** — declarative, set-and-forget |
+  | Ensure new accounts automatically get Inspector enabled | ✅ **AWS Organizations Inspector Policies** — native inheritance |
+  | OU-level scan type granularity (different scan types per OU) | ✅ **AWS Organizations Inspector Policies** —
+  child policy overrides |
+  | Enable EC2 Deep Inspection at scale | ✅ **This script** — `-a enable_deep_inspection -t members` |
+  | Designate a Delegated Administrator | ✅ **This script** — `-a delegate_admin` (required before attaching Org  
+  policies) |
+  | Check enablement status across all accounts and regions | ✅ **This script** — `-a get_status` |
+  | Full deactivation and cleanup workflow | ✅ **This script** — deactivate → disassociate → remove admin |
+  | Dry-run validation before making changes | ✅ **This script** — `--dry-run` |
+  | Activate/deactivate scans for a single specific account | ✅ **This script** — `-t ACCOUNTID` |
+
+### 7.4. Why EC2 Deep Inspection is the key differentiator
+
+  EC2 Deep Inspection is a **sub-feature** of EC2 scanning — it is **not** a scan type. While Org policies enable scan types (EC2, ECR, Lambda, etc.), they do **not** activate EC2 Deep Inspection.
+
+  Deep Inspection scans Linux-based EC2 instances for vulnerabilities in application programming language packages (Java, Python, Node.js, Go, Rust, .NET, Ruby, PHP, etc.) — going beyond the OS-level package scanning that standard EC2 scanning provides.
+
+  To enable Deep Inspection at scale across your organization, use this script:
+
+  ```bash
+  # Enable EC2 Deep Inspection on all member accounts across configured regions
+  ./inspector2_enablement_with_awscli.sh -a enable_deep_inspection -t members
+  ```
+
+### 7.5. What Org Policies do NOT handle
+For clarity, the following operations are not covered by AWS Organizations Inspector policies and still require this script or direct API calls:
+
+  - EC2 Deep Inspection activation/deactivation
+  - Delegated Administrator designation (must be done before attaching policies)
+  - Cross-account/cross-region status reporting
+  - Deactivation workflows — detaching an Org policy leaves Inspector enabled; it does not disable it
+  - Account disassociation from the Delegated Administrator.
 
 ## Security
 
