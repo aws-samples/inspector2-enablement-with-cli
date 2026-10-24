@@ -176,16 +176,16 @@ get_scanning_type (){
     scantype2activate=""
 
     if [ "X$1" == "X"  ]; then ## An argument is not given
-        if [ "X$scanning_in_file" == "X" ]; then
+        if [ -f $params_file ]; then #if the file exist, then try to read the value set for scanning type in the file
+            scanning_in_file="$(cat $params_file | jq -r '.scanning_type.selected')" 1>>$tmp_file_execution 2>>$tmp_file_execution
+        else
+            scanning_in_file=""
+        fi
+        if [ "X$scanning_in_file" == "X" ] || [ "$scanning_in_file" == "null" ]; then
             #default value then
             rsstype="$default_rsstype"
             echo "$default_rsstype"
         else
-            if [ -f $params_file ]; then
-                scanning_in_file="$(cat $params_file | jq -r '.scanning_type.selected')" 1>>$tmp_file_execution 2>>$tmp_file_execution
-            else    
-                scanning_in_file=""
-            fi
             rsstype="$scanning_in_file"
             echo "$scanning_in_file"
         fi
